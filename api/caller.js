@@ -30,17 +30,6 @@ export const POSTLOGIN = async (endpoint, params = {}, headers = {}, body = {}) 
    });
 };
 
-export const POST_NOBODY = async (endpoint, params = {}, headers = {}, body = {}) => {
-   headers["Content-Type"] = "application/json";
-   const token = await AsyncStorage.getItem("jwt");
-   headers["Authorization"] = token;
-   return fetch(endpoint, {
-      method: "POST",
-      headers: headers,
-      body: JSON.stringify(body)
-   });
-};
-
 export const PUT = async (endpoint, params = {}, headers = {}, body = {}) => {
    const token = await AsyncStorage.getItem("jwt");
    headers["Content-Type"] = "application/json";
@@ -49,7 +38,7 @@ export const PUT = async (endpoint, params = {}, headers = {}, body = {}) => {
       method: "PUT",
       headers: headers,
       body: JSON.stringify(body)
-   });
+   }).then(res => res.json());
 };
 
 export const DELETE = (endpoint, params = {}, headers = {}) => {

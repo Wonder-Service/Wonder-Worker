@@ -13,54 +13,42 @@ import {
   Button,
 } from 'react-native';
 import DropdownAlert from 'react-native-dropdownalert';
-import {
-  LOGIN_ENDPOINT,
-  DEVICEID_ENDPOINT,
-  USER_ENDPOINT,
-} from '../api/endpoint';
+import {LOGIN_ENDPOINT} from '../api/endpoint';
 import NavigationService from '../service/navigation';
-import {POSTLOGIN, PUT, GET} from '../api/caller';
+import {POSTLOGIN} from '../api/caller'
 
 export default class LoginScreen extends Component {
   state = {username: '', password: ''};
 
   handleLogin = async () => {
     const {username, password} = this.state;
-    if (username === '' || password === '') {
-      this.dropDownAlertRef.alertWithType (
-        'warn',
-        'Error Message',
-        'Please Fill username and password'
-      );
-    } else {
-      await POSTLOGIN (
-        LOGIN_ENDPOINT,
-        {},
-        {},
-        {
-          username: username,
-          password: password,
-        }
-      ).then (async res => {
-        if (res.status === 200) {
-          const jwt = res.headers.get ('Authorization');
-          await AsyncStorage.setItem ('jwt', jwt);
-          NavigationService.navigate ('Home');
-          await GET (USER_ENDPOINT + '?isMyProfile=1', {}, {})
-            .then (async res => {
-        
-              await AsyncStorage.setItem ('userId', res[0].id + '');
-            })
-            .catch (error => {
-              console.log ('ReqeustDetailScreen apiget User ERROR');
-              console.log (error);
-            });
-        }
-        if (res.status != 200) {
-          this.dropDownAlertRef.alertWithType ('error', 'Error', res.status);
-        }
-      });
-    }
+    // if (username === '' || password === '') {
+    //   this.dropDownAlertRef.alertWithType (
+    //     'warn',
+    //     'Error Message',
+    //     'Please Fill username and password'
+    //   );
+    // } else {
+      // await POSTLOGIN (
+      //   LOGIN_ENDPOINT,
+      //   {},
+      //   {},
+      //   {
+      //     username: username,
+      //     password: password
+      //   }
+      // ).then (async res => {
+      //   if (res.status === 200) {
+         
+      //     await AsyncStorage.setItem ('jwt', res.headers.get("Authorization"));
+      //     console.log(res.headers.get("Authorization"));
+          NavigationService.navigate('Home');
+      //   }
+      //   if(res.status != 200) {
+      //     this.dropDownAlertRef.alertWithType('error','Error', res.status)
+      //   }
+      // });
+    // }
   };
 
   render () {
@@ -114,7 +102,6 @@ const styles = StyleSheet.create ({
     marginTop: 150,
     marginBottom: 30,
     textAlign: 'center',
-    fontFamily: 'Rubik-Black',
   },
   loginFormView: {
     flex: 1,
