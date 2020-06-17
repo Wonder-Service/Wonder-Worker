@@ -28,13 +28,13 @@ const Container = createStackNavigator (
         gesturesEnabled: false,
       },
     },
-    NewHome: {
-      screen: NewHome,
-      navigationOptions: {
-        header: null,
-        gesturesEnabled: false,
-      },
-    },
+    // NewHome: {
+    //   screen: NewHome,
+    //   navigationOptions: {
+    //     header: null,
+    //     gesturesEnabled: false,
+    //   },
+    // },
     MapDirection: {
       screen: MapDirection,
       navigationOptions: {
