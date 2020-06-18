@@ -8,6 +8,7 @@ export const DEVICEID_ENDPOINT = `${BASE_URL}/api/users/device-id/`;
 export const ACCEPT_ORDER_ENDPOINT = `${BASE_URL}/api/orders`;
 export const POST_NOTIFICATION_ENDPOINT = 'https://expo.io/--/api/v2/push/send'
 export const USER_ENDPOINT = `${BASE_URL}/api/users`;
+export const USER_GET_PROFILE_ENDPOINT = `${BASE_URL}/api/users/jwt`;
 export const ORDER_COMPLETE_ENDPOINT = `${BASE_URL}/api/orders`
 
 export const CANCEL_ORDER_ENDPOINT  = `${BASE_URL}/api/order-cancel`
