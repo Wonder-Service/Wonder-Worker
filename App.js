@@ -7,6 +7,7 @@ import { Platform, ActivityIndicator, StatusBar, View } from "react-native";
 import Login from "./screens/LoginScreen";
 import Home from "./screens/HomeScreen";
 // import NewHome from "./screens/NewHomeScreen";
+import ProfileScreen from "./screens/ProfileScreen";
 import NavigationService from "./service/navigation";
 import MapDirection from './components/MapDirection'
 import { AppLoading } from 'expo';
@@ -41,7 +42,14 @@ const Container = createStackNavigator (
         header: null,
         gesturesEnabled: false,
       },
-    }
+    },
+    ProfileScreen: {
+      screen: ProfileScreen,
+      navigationOptions: {
+        header: null,
+        gesturesEnabled: false,
+      },
+    },
   },
   {
     initialRouteName: "Login",

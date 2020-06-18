@@ -251,7 +251,9 @@ export default class NewHomeScreen extends React.Component {
         <View style={styles.container}>
           <View style={styles.imageHeader}>
             <FontAwesome name="history" size={35} color="black" />
-            <MaterialCommunityIcons name="face-profile" size={35} color="black" />
+            <MaterialCommunityIcons name="face-profile" size={35} color="black" onPress={() => {
+              NavigationService.navigate("ProfileScreen");
+            }} />
           </View>
 
           <View style={styles.mainImage}>
