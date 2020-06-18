@@ -113,18 +113,25 @@ export default class ProfileScreen extends Component{
               </View>
 
               <View style={styles.profileBody}>
-                <Image
+
+                <View 
                   style={{
-                    marginLeft: 100,
-                    marginTop: -80,
-                    width:150,
-                    height:150,
-                    borderRadius:100,
-                  }}
+                    justifyContent: "center",
+                    alignItems: "center",
+                    textAlign: "center",
+                  }}>
+                <Image
+                    style={{
+                      marginTop: -80,
+                      width: 150,
+                      height: 150,
+                      borderRadius: 100,
+                      }}
                   source={{
                     uri: 'https://www.clipartwiki.com/clipimg/full/146-1460660_handyman-clipart-hardware-store-mr-fix-it-logo.png',
                   }}
                 />
+                </View>
 
                 {/* Add Full name */}
                 <View
