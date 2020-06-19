@@ -5,6 +5,7 @@ import {
   SafeAreaView, AsyncStorage, Dimensions
 } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
+import {Appbar} from 'react-native-paper'
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Notifications } from 'expo';
 import * as firebase from 'firebase';
@@ -249,12 +250,18 @@ export default class NewHomeScreen extends React.Component {
 
       <SafeAreaView style={styles.container}>
         <View style={styles.container}>
+
+        <Appbar style={styles.header}>
+          <Entypo name="menu" size={30} color="white" />
+          <Text style={styles.headerText}>Wonder Worker</Text>
           <View style={styles.imageHeader}>
-            <FontAwesome name="history" size={35} color="black" />
-            <MaterialCommunityIcons name="face-profile" size={35} color="black" onPress={() => {
+            <FontAwesome name="history" size={30} color="white" />
+            <FontAwesome name="user" size={30} color="white" onPress={() => {
               NavigationService.navigate("ProfileScreen");
-            }} />
+            }}/>
           </View>
+          </Appbar>
+        
 
           <View style={styles.mainImage}>
             <Image
@@ -310,6 +317,7 @@ export default class NewHomeScreen extends React.Component {
 
 
 
+
           <View style={styles.centeredView}>
             <Modal animationType="slide"
               transparent={true}
@@ -320,25 +328,32 @@ export default class NewHomeScreen extends React.Component {
               }
             >
               <View style={styles.modalView}>
+               <View style={styles.titlePopUpContainer}>
                 <Text style={styles.headerPopUp}>Customer's Information</Text>
+                </View>
+          
                 <View style={styles.inforContainer}>
                   <Octicons name="list-ordered" size={24} color="black" />
-                  <Text style={styles.modalText}>Order ID: {notification.orderId} </Text>
+                  <Text style={styles.modalText}>Order ID:  </Text>
+                  <TextInput style={styles.dataInput}>{notification.orderId}</TextInput>
                 </View>
 
                 <View style={styles.inforContainer}>
                   <MaterialIcons name="description" size={24} color="black" />
-                  <Text style={styles.modalText}>Description: {notification.description} </Text>
+                  <Text style={styles.modalText}>Description:  </Text>
+                  <TextInput style={styles.dataInput}>{notification.description}</TextInput>
                 </View>
 
                 <View style={styles.inforContainer}>
                   <FontAwesome name="user" size={24} color="black" />
-                  <Text style={styles.modalText}>Name: {notification.customerName} </Text>
+                  <Text style={styles.modalText}>Name: </Text>
+                  <TextInput style={styles.dataInput}>{notification.customerName}</TextInput>
                 </View>
 
                 <View style={styles.inforContainer}>
                   <Entypo name="location-pin" size={24} color="black" />
-                  <Text style={styles.modalText}>Address: {notification.address} </Text>
+                  <Text style={styles.modalText}>Address: </Text>
+                  <TextInput style={styles.dataInput}>{notification.address}</TextInput>
                 </View>
 
                 {/* <View style={styles.inforContainer}>
@@ -348,7 +363,8 @@ export default class NewHomeScreen extends React.Component {
 
                 <View style={styles.inforContainer}>
                   <FontAwesome name="phone-square" size={24} color="black" />
-                  <Text style={styles.modalText}>Phone: {notification.customerPhone}</Text>
+                  <Text style={styles.modalText}>Phone: </Text>
+                  <TextInput style={styles.dataInput}>{notification.customerPhone}</TextInput>
                 </View>
 
                 {/* <TouchableOpacity onPress={() => {
@@ -361,18 +377,19 @@ export default class NewHomeScreen extends React.Component {
                 </TouchableOpacity> */}
 
                 <TouchableOpacity onPress={this.handleAccept}>
-                  <View style={styles.buttonView}>
-                    <Text style={StyleSheet.mainButtonText}>Accept</Text>
+                  <View style={styles.acceptButton}>
+                    <Text style={styles.mainButtonText}>Accept</Text>
                   </View>
                 </TouchableOpacity>
 
                 <TouchableOpacity
                   onPress={() => {
-                    this.getLocationByCoords({ latitude: 10.852766, longitude: 106.629230 })
+                    this.setModalVisible(false)
+                    // this.getLocationByCoords({ latitude: 10.852766, longitude: 106.629230 })
                   }}
                 >
-                  <View style={styles.buttonView}>
-                    <Text style={StyleSheet.mainButtonText}>Decline</Text>
+                  <View style={styles.declineButton}>
+                    <Text style={styles.mainButtonText}>Decline</Text>
                   </View>
                 </TouchableOpacity>
               </View>
@@ -392,33 +409,36 @@ const styles = StyleSheet.create({
   container: {
     width: '100%',
     height: '100%',
-    justifyContent: 'center'
+    justifyContent: 'center',
+    
   },
   imageHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    justifyContent: 'space-evenly',
     width: 70,
     height: 35,
     marginTop: 105,
-    marginLeft: 300
+    marginLeft: 300,
+    position: "absolute"
   },
   mainImage: {
     alignItems: 'center',
     justifyContent: 'center',
-    paddingTop: 55,
+    paddingTop: 50,
     // height: 329,
     // width: 343,
     // marginLeft: 36
+    
   },
   textContainer: {
     width: 415,
     height: 130,
 
     borderWidth: 1,
-    backgroundColor: '#39AAA3',
+    backgroundColor: '#428CD4',
     //marginLeft: 15,
     flexDirection: 'row',
-    marginTop: 50
+    marginTop: 100
 
 
 
@@ -493,10 +513,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     width: 320,
     height: 50,
-    borderColor: 'black',
-    borderWidth: 1,
+    //borderColor: 'black',
+    //borderWidth: 1,
     marginTop: 30,
-    borderRadius: 10,
+    //borderRadius: 10,
     alignItems: 'center',
     //justifyContent: 'center'
     //marginRight: 20
@@ -510,24 +530,36 @@ const styles = StyleSheet.create({
   //   marginTop: 20
   // },
   headerPopUp: {
-    fontSize: 20,
+    fontSize: 23,
     fontWeight: "800",
     //marginLeft: 20,
 
   },
   mainButtonText: {
-    fontSize: 30,
+    fontSize: 16,
     color: 'white',
   },
 
-  buttonView: {
-    padding: 20,
-    backgroundColor: 'rgba(80, 203, 203, 1)',
+  acceptButton: {
+    padding: 18,
+    //backgroundColor: 'rgba(80, 203, 203, 1)',
     borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 20,
     width: Dimensions.get ('screen').width * 8 / 10,
+    backgroundColor: '#22bc42'
+  },
+
+  declineButton: {
+    padding: 18,
+    //backgroundColor: 'rgba(80, 203, 203, 1)',
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 20,
+    width: Dimensions.get ('screen').width * 8 / 10,
+    backgroundColor: '#f04c26'
   },
 
   buttonCancelView: {
@@ -538,5 +570,26 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     width: Dimensions.get ('screen').width * 8 / 10,
   },
-
+  dataInput: {
+    borderBottomColor: "grey",
+    borderBottomWidth: 1,
+    height: 30,
+    width: 180,
+    marginLeft: -30
+    
+  },
+  header: {
+    backgroundColor: '#428CD4',
+    marginTop: 40
+  },
+  headerText: { 
+    fontSize: 30,
+    fontWeight: "800",
+    marginLeft: 35,
+    color: '#ffffff'
+  },
+  titlePopUpContainer: {
+    width: Dimensions.get ('screen').width * 8 / 10,
+    alignItems: 'center'
+  }
 })

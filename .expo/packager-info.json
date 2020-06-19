@@ -1,10 +1,10 @@
 {
   "devToolsPort": 19002,
-  "expoServerPort": null,
-  "packagerPort": null,
-  "packagerPid": null,
-  "expoServerNgrokUrl": null,
-  "packagerNgrokUrl": null,
-  "ngrokPid": null,
+  "expoServerPort": 19005,
+  "packagerPort": 19001,
+  "packagerPid": 8880,
+  "expoServerNgrokUrl": "https://4p-iav.thuan1110.wonder-worker.exp.direct",
+  "packagerNgrokUrl": "https://packager.4p-iav.thuan1110.wonder-worker.exp.direct",
+  "ngrokPid": 9556,
   "webpackServerPort": null
 }
