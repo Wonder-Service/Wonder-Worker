@@ -10,7 +10,9 @@ import Home from "./screens/HomeScreen";
 import ProfileScreen from "./screens/ProfileScreen";
 import LoginV2 from "./screens/LoginScreenV2";
 import NavigationService from "./service/navigation";
-import MapDirection from './components/MapDirection'
+import MapDirection from './components/MapDirection';
+import HistoryScreen from './screens/HistoryScreen';
+import HistoryDetail from "./screens/HistoryDetail";
 import { AppLoading } from 'expo';
 
 
@@ -26,6 +28,20 @@ const Container = createStackNavigator (
     LoginV2:{
       screen: LoginV2,
       navigationOptions: {
+        header: null,
+        gesturesEnabled: false,
+      },
+    },
+    HistoryScreen:{
+      screen:HistoryScreen,
+      navigationOptions:{
+        header: null,
+        gesturesEnabled: false,
+      },
+    },
+    HistoryDetail:{
+      screen:HistoryDetail,
+      navigationOptions:{
         header: null,
         gesturesEnabled: false,
       },

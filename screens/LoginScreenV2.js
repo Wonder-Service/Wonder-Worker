@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { StyleSheet, Text, View, SafeAreaView, StatusBar, Image, TextInput, TouchableWithoutFeedback, Keyboard, TouchableOpacity, KeyboardAvoidingView } from 'react-native';
+import { StyleSheet, Text, View,AsyncStorage, SafeAreaView, StatusBar, Image, TextInput, TouchableWithoutFeedback, Keyboard, TouchableOpacity, KeyboardAvoidingView } from 'react-native';
 import {
     widthPercentageToDP as wp,
     heightPercentageToDP as hp,
@@ -69,7 +69,11 @@ export default class LoginScreenV2 extends React.Component {
                                 <Text style={styles.Titles}>Lets find some job!</Text>
                             </View>
                             <View style={styles.infoContainter}>
-                                <TextInput style={styles.input}
+                                <TextInput
+                                    onChangeText={text => {
+                                        this.setState({ username: text });
+                                    }}
+                                    style={styles.input}
                                     placeholder="Username/email"
                                     placeholderTextcolor='rgba(255,255,255,0.8)'
                                     keyboardType='email-address'
@@ -77,7 +81,11 @@ export default class LoginScreenV2 extends React.Component {
                                     autoCorrect={false}
                                     onSubmitEditing={() => this.refs.txtPassword.focus()}
                                 />
-                                <TextInput style={styles.input}
+                                <TextInput
+                                    onChangeText={text => {
+                                        this.setState({ password: text });
+                                    }}
+                                    style={styles.input}
                                     placeholder="Enter password"
                                     placeholderTextcolor='rgba(255,255,255,0.8)'
                                     keyboardType='default'
