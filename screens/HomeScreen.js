@@ -250,7 +250,9 @@ export default class NewHomeScreen extends React.Component {
       <SafeAreaView style={styles.container}>
         <View style={styles.container}>
           <View style={styles.imageHeader}>
-            <FontAwesome name="history" size={35} color="black" />
+            <FontAwesome name="history" size={35} color="black" onPress={() => {
+              NavigationService.navigate("HistoryScreen");
+            }} />
             <MaterialCommunityIcons name="face-profile" size={35} color="black" onPress={() => {
               NavigationService.navigate("ProfileScreen");
             }} />
