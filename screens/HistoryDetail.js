@@ -59,7 +59,7 @@ export default class HistoryDetail extends React.Component {
             {},
         ).then((resCustomer) => {
             this.setState({
-                customerName: resCustomer.username
+                customerName: resCustomer.fullname
             })
         })
     }

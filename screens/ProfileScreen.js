@@ -9,7 +9,6 @@ import {
   AsyncStorage,
   SafeAreaView,
 } from "react-native";
-import { Input, Block, theme, Button } from 'galio-framework';
 import { TouchableOpacity } from "react-native-gesture-handler";
 import { TextInput } from 'react-native-gesture-handler'; 
 import { GET,PUT } from "../api/caller";
@@ -42,7 +41,7 @@ export default class ProfileScreen extends Component{
 
     // not have history order Screen yet
   handleHistoryOrderButton = () => {
-    NavigationService.navigate("HistoryOrderScreen")
+    NavigationService.navigate("HistoryScreen")
   }
 
 

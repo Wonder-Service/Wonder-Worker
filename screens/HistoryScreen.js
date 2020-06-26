@@ -137,7 +137,7 @@ export default class HistoryScreen extends Component {
         </View>
         <View style={{ flex: 1, width: '100%' }}>
           <FlatList
-            data={this.state.listOrder}
+            data={this.state.listOrder.reverse()}
             renderItem={({ item, index }) => {
               return (
                 <FlatListItem item={item} index={index}></FlatListItem>
