@@ -1,6 +1,6 @@
 // export const BASE_URL = "https://fixxyworker.herokuapp.com";
 
-export const BASE_URL = "http://192.168.43.210:8080"
+export const BASE_URL = "http://10.1.139.26:8080"
 
 //export const BASE_URL = "http://192.168.0.102:8080"
 
