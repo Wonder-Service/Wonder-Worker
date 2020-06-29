@@ -45,7 +45,7 @@ export default class LoginScreen extends Component {
         if (res.status === 200) {
           const jwt = res.headers.get ('Authorization');
           await AsyncStorage.setItem ('jwt', jwt);
-          NavigationService.navigate ('Home');
+          NavigationService.navigate('RequestScreen');
           await GET (USER_ENDPOINT + '?isMyProfile=1', {}, {})
             .then (async res => {
         

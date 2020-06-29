@@ -250,9 +250,6 @@ export default class NewHomeScreen extends React.Component {
       <SafeAreaView style={styles.container}>
         <View style={styles.container}>
           <View style={styles.imageHeader}>
-            <FontAwesome name="history" size={35} color="black" onPress={() => {
-              NavigationService.navigate("HistoryScreen");
-            }} />
             <MaterialCommunityIcons name="face-profile" size={35} color="black" onPress={() => {
               NavigationService.navigate("ProfileScreen");
             }} />
@@ -272,20 +269,7 @@ export default class NewHomeScreen extends React.Component {
 
             <TouchableOpacity
               onPress={() => {
-              
-                //this.setModalVisible(true);
-                if (editable) {
-                  this.setState({ editable: false });
-                } else {
-                  this.setState({ editable: true });
-                }
-                if (btnEditText !== 'Start Finding') {
-                  this.setState({ btnEditText: 'Start Finding' });
-                  this.stopJob();
-                } else {
-                  this.setState({ btnEditText: 'Stop' });
-                  this.startJob();
-                }
+                NavigationService.navigate("RequestScreen");
               }}
             >
               <View
@@ -343,24 +327,11 @@ export default class NewHomeScreen extends React.Component {
                   <Text style={styles.modalText}>Address: {notification.address} </Text>
                 </View>
 
-                {/* <View style={styles.inforContainer}>
-                  <Text style={styles.inforText}>Issue: </Text>
-                  <Text style={styles.inforText}>Bla Bla Bla</Text>
-                </View> */}
-
                 <View style={styles.inforContainer}>
                   <FontAwesome name="phone-square" size={24} color="black" />
                   <Text style={styles.modalText}>Phone: {notification.customerPhone}</Text>
                 </View>
 
-                {/* <TouchableOpacity onPress={() => {
-                  this.setModalVisible(!modalVisible);
-                }}
-                >
-                  <View style={styles.closeButton}>
-                    <Button title="Close" onPress={() => { this.setModalVisible(false) }} />
-                  </View>
-                </TouchableOpacity> */}
 
                 <TouchableOpacity onPress={this.handleAccept}>
                   <View style={styles.buttonView}>
@@ -381,6 +352,9 @@ export default class NewHomeScreen extends React.Component {
 
             </Modal>
           </View>
+
+
+          
         </View>
 
       </SafeAreaView>
@@ -484,13 +458,7 @@ const styles = StyleSheet.create({
     marginTop: 22
 
   },
-  // headerModal: {
-  //   flexDirection: 'row',
-  //   width: 300,
-  //   height: 80,
-  //   borderColor: 'black',
-  //   borderWidth: 1
-  // },
+
   inforContainer: {
     flexDirection: 'row',
     width: 320,
@@ -504,13 +472,7 @@ const styles = StyleSheet.create({
     //marginRight: 20
 
   },
-  // inforText: {
-  //   fontSize: 18,
-
-  // },
-  // closeButton: {
-  //   marginTop: 20
-  // },
+  
   headerPopUp: {
     fontSize: 20,
     fontWeight: "800",
