@@ -264,12 +264,26 @@ export default class NewHomeScreen extends React.Component {
             />
           </View>
 
+
           <View style={styles.textContainer}>
             <Text style={styles.text}>Let's Start Working!!</Text>
-
+            <View style={{flexDirection:"column",justifyContent:'center',alignContent:'center'}}>
             <TouchableOpacity
               onPress={() => {
-                NavigationService.navigate("RequestScreen");
+
+                //this.setModalVisible(true);
+                if (editable) {
+                  this.setState({ editable: false });
+                } else {
+                  this.setState({ editable: true });
+                }
+                if (btnEditText !== 'Start Finding') {
+                  this.setState({ btnEditText: 'Start Finding' });
+                  this.stopJob();
+                } else {
+                  this.setState({ btnEditText: 'Stop' });
+                  this.startJob();
+                }
               }}
             >
               <View
@@ -288,9 +302,34 @@ export default class NewHomeScreen extends React.Component {
                   {btnEditText}
                 </Text>
               </View>
-
-
             </TouchableOpacity>
+            
+            <TouchableOpacity
+              onPress={() => {
+                NavigationService.navigate("RequestScreen");
+              }}
+            >
+              <View
+                style={[
+                  styles.button,
+                  {
+                    backgroundColor: '#3ddc84',
+                    width: '65%',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    borderColor: '#fff',
+                    marginBottom:35,
+                  },
+                ]}
+              >
+                <Text style={{ color: '#fff', padding: 5, }}>
+                  start working
+                </Text>
+              </View>
+            </TouchableOpacity>
+
+            </View>
+
           </View>
 
 
@@ -394,9 +433,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#39AAA3',
     //marginLeft: 15,
     flexDirection: 'row',
-    marginTop: 50
-
-
+    marginTop: 50,
+    bottom: 0,
+    position: "absolute",
 
   },
   text: {
