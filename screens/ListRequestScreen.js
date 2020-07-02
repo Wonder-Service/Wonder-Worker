@@ -16,7 +16,7 @@ import { PUT, POST, POSTLOGIN, POST_NOBODY, GET } from '../api/caller';
 import {
   ACCEPT_ORDER_ENDPOINT,
   ORDER_GET_BY_SKILL_ENDPOINT,
-  USER_ENDPOINT,
+  GET_ALL_SKILL,
   USER_GET_PROFILE_ENDPOINT,
 } from '../api/endpoint';
 import { TextInput } from 'react-native-gesture-handler';
@@ -30,8 +30,7 @@ class FlatListItem extends React.Component {
     super(props);
     this.state = {
       isLoading: true,
-      loadPopUpOrderData: [],
-      loadPopUPUserData: [],
+      loadSkillData: [],
       emptyData: [],
       modalVisible: false,
       editable: false,
@@ -44,30 +43,11 @@ class FlatListItem extends React.Component {
       customerName: "",
       customerAddress: "",
       customerPhone: "",
+      orderDevice:"",
     };
   };
 
 
-  // get order by skill
-  async componentDidMount() {
-    // let jwt = await AsyncStorage.getItem ('jwt');
-    await GET(ORDER_GET_BY_SKILL_ENDPOINT, {}, {}).then(
-      (resJson) => {
-        for (var i = 0; i < resJson.length; i++) {
-          if (resJson[i].nameDevice == this.state.orderID){
-            this.setState({
-              orderID: res[i].id,
-              orderDescription: res[i].workDescription.description,
-            })
-          }
-        }
-
-        this.setState({
-          isLoading: false,
-        });
-      }
-    );
-  }
 
   // get user information
   async componentDidMount() {
@@ -91,6 +71,8 @@ class FlatListItem extends React.Component {
       }
     );
   }
+
+
   setModalVisible = (visible) => {
     this.setState({ modalVisible: visible });
   };
@@ -131,28 +113,34 @@ class FlatListItem extends React.Component {
       .catch(err => console.log(err));
   };
 
-  handlerSelectCatogery = (orderId,customerId) => {
+  handlerSelectCatogery = (orderId,customerId,deviceName,description) => {
     this.setState({ modalVisible: true });
     this.setState({ orderID: orderId, })
     this.setState({ customerID: customerId, })
+    this.setState({orderDescription: description,})
+    this.setState({ orderDevice: deviceName})
   };
-
   render() {
 
     const {
       modalVisible,
       orderID,
+      orderDevice,
       orderDescription,
       customerName,
       customerAddress,
       customerPhone,
     } = this.state;
 
+
     return (
       <View>
         <TouchableOpacity
           onPress={() => {
-            this.handlerSelectCatogery(this.props.item.id, this.props.item.workDescription.customerId)
+            this.handlerSelectCatogery(this.props.item.id, this.props.item.workDescription.customerId, this.props.item.nameDevice,
+              this.props.item.workDescription.description)
+
+            console.log(this.props.item.nameDevice)
           }}
         >
           <View style={styles.itemHandle}>
@@ -163,10 +151,9 @@ class FlatListItem extends React.Component {
             <View
               style={{ flexDirection: "column", width: "80%", height: "100%" }}
             >
-              <Text style={styles.title}>{this.props.item.nameDevice}</Text>
-              <Text style={styles.subtitle}>
-                Address:{this.props.item.address}
-              </Text>
+                
+              <Text style={styles.title}>{this.props.item.nameDevice}</Text> {/*  SKILL NAME */}
+              <Text style={styles.subtitle}>{this.props.item.address}</Text>
               <Text style={styles.subtitle}>
                 {this.props.item.workDescription.dateCreated}
               </Text>
@@ -188,60 +175,39 @@ class FlatListItem extends React.Component {
           }}
         >
           <View style={styles.modalView}>
-            <Text style={styles.headsuberPopUp}>
-              Customer's Information
-            </Text>
-            <View style={styles.inforContainer}>
-              <Octicons
-                name="list-ordered"
-                size={24}
-                color="black"
-                style={{ marginLeft: 5 }}
-              />
-              <Text style={styles.subtitle}>
-                Order ID: {orderID}
-              </Text>
-            </View>
 
-            <View style={styles.inforContainer}>
-              <MaterialIcons
-                name="description"
-                size={24}
-                color="black"
+            <View style={{flexDirection:"row",width:"100%",height:130,}}>
+              <Image
+                style={{
+                  width: 100,
+                  height: 100,
+                  marginLeft:10,
+                  borderRadius:100,
+                  opacity:1,
+                }}
+                source={require("../assets/images/popUpPic.png")}
               />
-              <Text style={styles.subtitle}>
-                Description: {orderDescription}
-              </Text>
+              <View>
+                <Text style={{ fontSize: 20, marginLeft: 10 }}>{orderDevice}</Text>
+                <Text style={{ fontSize: 20, marginLeft: 10}}>model name:</Text>
+                <Text style={{ fontSize: 20, marginLeft: 10 }}>{orderDevice}</Text>
+              </View>
             </View>
+  
+              <Text style={{fontSize:20}}>Address</Text>
+              <View style={{ borderRadius: 20, width: "100%", height: 100, borderWidth: 1, flexDirection: "row",alignContent:"flex-start" }}>
+              <Text style={{ fontSize: 16, marginLeft: 15, marginTop: 10 }}>{customerAddress}</Text>
+              </View>
 
-            <View style={styles.inforContainer}>
-              <FontAwesome
-                name="user"
-                size={24}
-                color="black"
-                style={{ marginLeft: 5 }}
-              />
-              <Text style={styles.subtitle}>{customerName}</Text>
-            </View>
+              <Text style={{fontSize:20}}>Issue</Text>
+              <View style={{ borderRadius: 20, width: "100%", height: 100, borderWidth: 1, flexDirection: "row",alignContent:"flex-start" }}>
+                <Text style={{ fontSize:16,marginLeft:15,marginTop:10 }}>{orderDescription}</Text>
+              </View>
 
-            <View style={styles.inforContainer}>
-              <Entypo
-                name="location-pin"
-                size={24}
-                color="black"
-              />
-              <Text style={styles.subtitle}>{customerAddress}</Text>
-            </View>
-
-            <View style={styles.inforContainer}>
-              <FontAwesome
-                name="phone-square"
-                size={24}
-                color="black"
-                style={{marginLeft:5}}
-              />
-              <Text style={styles.subtitle}>{customerPhone}</Text>
-            </View>
+              <Text style={{fontSize:20,marginTop:10}}>Customer Information</Text>
+            <Text style={{ fontSize: 20,marginTop:10}}>Name:{customerName}</Text>
+              <Text style={{ fontSize: 20,marginTop:10 }}>Phone:{customerPhone}</Text>
+        
 
             <TouchableOpacity onPress={this.handleAccept}>
               <View style={styles.buttonView}>
@@ -395,7 +361,7 @@ export default class listRequestScreen extends React.Component {
                   }}
                 >
                   Refresh
-                               </Text>
+                </Text>
               </View>
             </TouchableOpacity>
           </View>
@@ -577,7 +543,6 @@ const styles = StyleSheet.create({
   image: {
     width: 52,
     height: 52,
-    marginRight: 20,
   },
 
   modalView: {
@@ -596,7 +561,6 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
-    alignItems: "center",
   },
   modalText: {
     //marginBottom: 15,
@@ -641,13 +605,14 @@ const styles = StyleSheet.create({
   },
 
   buttonView: {
-    padding: 20,
+    padding: 15,
     backgroundColor: "rgba(80, 203, 203, 1)",
     borderRadius: 20,
     alignItems: "center",
     justifyContent: "center",
     marginTop: 20,
-    width: (Dimensions.get("screen").width * 8) / 10,
+    marginRight:10,
+    width: (Dimensions.get("screen").width * 7) / 10,
   },
 
   buttonCancelView: {
