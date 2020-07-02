@@ -16,7 +16,6 @@ import { PUT, POST, POSTLOGIN, POST_NOBODY, GET } from '../api/caller';
 import {
   ACCEPT_ORDER_ENDPOINT,
   ORDER_GET_BY_SKILL_ENDPOINT,
-  GET_ALL_SKILL,
   USER_GET_PROFILE_ENDPOINT,
 } from '../api/endpoint';
 import { TextInput } from 'react-native-gesture-handler';
@@ -30,7 +29,6 @@ class FlatListItem extends React.Component {
     super(props);
     this.state = {
       isLoading: true,
-      loadSkillData: [],
       emptyData: [],
       modalVisible: false,
       editable: false,
