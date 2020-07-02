@@ -42,7 +42,7 @@ class FlatListItem extends React.Component {
       customerAddress: "",
       customerPhone: "",
       orderDevice:"",
-    };
+    }
   };
 
 
@@ -150,7 +150,7 @@ class FlatListItem extends React.Component {
               style={{ flexDirection: "column", width: "80%", height: "100%" }}
             >
                 
-              <Text style={styles.title}>{this.props.item.nameDevice}</Text> {/*  SKILL NAME */}
+              <Text style={styles.title}>{this.props.item.nameDevice}</Text>
               <Text style={styles.subtitle}>{this.props.item.address}</Text>
               <Text style={styles.subtitle}>
                 {this.props.item.workDescription.dateCreated}
