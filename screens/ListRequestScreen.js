@@ -16,7 +16,7 @@ import { PUT, POST, POSTLOGIN, POST_NOBODY, GET } from '../api/caller';
 import {
   ACCEPT_ORDER_ENDPOINT,
   ORDER_GET_BY_SKILL_ENDPOINT,
-  USER_GET_PROFILE_ENDPOINT,
+  USER_ENDPOINT,
 } from '../api/endpoint';
 import { TextInput } from 'react-native-gesture-handler';
 import { Octicons } from '@expo/vector-icons';
@@ -30,6 +30,7 @@ class FlatListItem extends React.Component {
     this.state = {
       isLoading: true,
       emptyData: [],
+      listCustomer:[],
       modalVisible: false,
       editable: false,
       btnEditText: "Stop",
@@ -51,24 +52,19 @@ class FlatListItem extends React.Component {
   async componentDidMount() {
     //get jwt
     //load profile data 
-    await GET(USER_GET_PROFILE_ENDPOINT, {}, {}).then(
+    await GET(USER_ENDPOINT, {}, {}).then(
       (resJson) => {
         for (var i = 0; i < resJson.length; i++) {
-          if (resJson[i].id == this.state.customerID) {
-            this.setState({
-              customerName: res[i].fullname,
-              customerAddress: res[i].address,
-              customerPhone: res[i].phone,
-            })
-          }
+            this.state.listCustomer.push(resJson[i]);
         }
-
         this.setState({
           isLoading: false,
         });
       }
+
     );
-  }
+  };
+
 
 
   setModalVisible = (visible) => {
@@ -114,9 +110,16 @@ class FlatListItem extends React.Component {
   handlerSelectCatogery = (orderId,customerId,deviceName,description) => {
     this.setState({ modalVisible: true });
     this.setState({ orderID: orderId, })
-    this.setState({ customerID: customerId, })
     this.setState({orderDescription: description,})
     this.setState({ orderDevice: deviceName})
+    for (var i = 0; i < this.state.listCustomer.length; i++) {
+      if (this.state.listCustomer[i].id == customerId) {
+        this.setState({ customerName: this.state.listCustomer[i].fullname })
+        this.setState({ customerPhone: this.state.listCustomer[i].phone })
+        this.setState({ customerAddress: this.state.listCustomer[i].address })
+      }
+    }
+
   };
   render() {
 
@@ -130,15 +133,16 @@ class FlatListItem extends React.Component {
       customerPhone,
     } = this.state;
 
-
     return (
       <View>
         <TouchableOpacity
           onPress={() => {
             this.handlerSelectCatogery(this.props.item.id, this.props.item.workDescription.customerId, this.props.item.nameDevice,
               this.props.item.workDescription.description)
-
+            
             console.log(this.props.item.nameDevice)
+            console.log("Customer ID from order: "+this.props.item.workDescription.customerId)
+          //  console.log(this.props.customerName)
           }}
         >
           <View style={styles.itemHandle}>
