@@ -13,6 +13,7 @@ import NavigationService from "./service/navigation";
 import MapDirection from './components/MapDirection';
 import HistoryScreen from './screens/HistoryScreen';
 import HistoryDetail from "./screens/HistoryDetail";
+import RequestScreen from "./screens/ListRequestScreen";
 import { AppLoading } from 'expo';
 
 
@@ -69,6 +70,14 @@ const Container = createStackNavigator (
     },
     ProfileScreen: {
       screen: ProfileScreen,
+      navigationOptions: {
+        header: null,
+        gesturesEnabled: false,
+      },
+    },
+
+    RequestScreen: {
+      screen: RequestScreen,
       navigationOptions: {
         header: null,
         gesturesEnabled: false,

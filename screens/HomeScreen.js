@@ -250,9 +250,6 @@ export default class NewHomeScreen extends React.Component {
       <SafeAreaView style={styles.container}>
         <View style={styles.container}>
           <View style={styles.imageHeader}>
-            <FontAwesome name="history" size={35} color="black" onPress={() => {
-              NavigationService.navigate("HistoryScreen");
-            }} />
             <MaterialCommunityIcons name="face-profile" size={35} color="black" onPress={() => {
               NavigationService.navigate("ProfileScreen");
             }} />
@@ -267,12 +264,13 @@ export default class NewHomeScreen extends React.Component {
             />
           </View>
 
+
           <View style={styles.textContainer}>
             <Text style={styles.text}>Let's Start Working!!</Text>
-
+            <View style={{flexDirection:"column",justifyContent:'center',alignContent:'center'}}>
             <TouchableOpacity
               onPress={() => {
-              
+
                 //this.setModalVisible(true);
                 if (editable) {
                   this.setState({ editable: false });
@@ -304,9 +302,34 @@ export default class NewHomeScreen extends React.Component {
                   {btnEditText}
                 </Text>
               </View>
-
-
             </TouchableOpacity>
+            
+            <TouchableOpacity
+              onPress={() => {
+                NavigationService.navigate("RequestScreen");
+              }}
+            >
+              <View
+                style={[
+                  styles.button,
+                  {
+                    backgroundColor: '#3ddc84',
+                    width: '65%',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    borderColor: '#fff',
+                    marginBottom:35,
+                  },
+                ]}
+              >
+                <Text style={{ color: '#fff', padding: 5, }}>
+                  start working
+                </Text>
+              </View>
+            </TouchableOpacity>
+
+            </View>
+
           </View>
 
 
@@ -343,24 +366,11 @@ export default class NewHomeScreen extends React.Component {
                   <Text style={styles.modalText}>Address: {notification.address} </Text>
                 </View>
 
-                {/* <View style={styles.inforContainer}>
-                  <Text style={styles.inforText}>Issue: </Text>
-                  <Text style={styles.inforText}>Bla Bla Bla</Text>
-                </View> */}
-
                 <View style={styles.inforContainer}>
                   <FontAwesome name="phone-square" size={24} color="black" />
                   <Text style={styles.modalText}>Phone: {notification.customerPhone}</Text>
                 </View>
 
-                {/* <TouchableOpacity onPress={() => {
-                  this.setModalVisible(!modalVisible);
-                }}
-                >
-                  <View style={styles.closeButton}>
-                    <Button title="Close" onPress={() => { this.setModalVisible(false) }} />
-                  </View>
-                </TouchableOpacity> */}
 
                 <TouchableOpacity onPress={this.handleAccept}>
                   <View style={styles.buttonView}>
@@ -381,6 +391,9 @@ export default class NewHomeScreen extends React.Component {
 
             </Modal>
           </View>
+
+
+          
         </View>
 
       </SafeAreaView>
@@ -420,9 +433,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#39AAA3',
     //marginLeft: 15,
     flexDirection: 'row',
-    marginTop: 50
-
-
+    marginTop: 50,
+    bottom: 0,
+    position: "absolute",
 
   },
   text: {
@@ -484,13 +497,7 @@ const styles = StyleSheet.create({
     marginTop: 22
 
   },
-  // headerModal: {
-  //   flexDirection: 'row',
-  //   width: 300,
-  //   height: 80,
-  //   borderColor: 'black',
-  //   borderWidth: 1
-  // },
+
   inforContainer: {
     flexDirection: 'row',
     width: 320,
@@ -504,13 +511,7 @@ const styles = StyleSheet.create({
     //marginRight: 20
 
   },
-  // inforText: {
-  //   fontSize: 18,
-
-  // },
-  // closeButton: {
-  //   marginTop: 20
-  // },
+  
   headerPopUp: {
     fontSize: 20,
     fontWeight: "800",
