@@ -32,7 +32,7 @@ export default class ProfileScreen extends Component{
         };
 
   handleBackHomeButton = () => {
-    NavigationService.navigate("HomeScreen")
+    NavigationService.navigate("Home")
   }
 
   handleLogoutButton = () => {

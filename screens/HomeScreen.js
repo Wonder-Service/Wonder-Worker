@@ -208,16 +208,19 @@ export default class NewHomeScreen extends React.Component {
       subtitle: this.state.messNotification.subtitle,
       body: this.state.messNotification.body,
       data: this.state.messNotification.data,
-      catogery: this.state.catogery,
+      // catogery: this.state.catogery,
     };
     //send notification to customer
     console.log(param);
     const token = await await Notifications.getExpoPushTokenAsync();
     await POST(POST_NOTIFICATION_ENDPOINT, {}, {}, param)
       .then(res => {
+        console.log('receive Response success!');
+        console.log("Response Status: " + res.status);
         if (res.status === 200) {
+          console.log("Response Status: " + res.status);
           // waiting for customer accept
-          console.log('Send Request susscess');
+          console.log('Send Request succcess');
         }
       })
       .catch(err => console.log(err));
@@ -243,7 +246,7 @@ export default class NewHomeScreen extends React.Component {
       modalVisible,
       notification,
       address,
-     
+
     } = this.state;
     return (
 
@@ -260,80 +263,77 @@ export default class NewHomeScreen extends React.Component {
 
               source={require('../assets/images/worker.png')}
 
-              // source = {{ uri: this.state.imageURL }}
+            // source = {{ uri: this.state.imageURL }}
             />
           </View>
 
 
           <View style={styles.textContainer}>
             <Text style={styles.text}>Let's Start Working!!</Text>
-            <View style={{flexDirection:"column",justifyContent:'center',alignContent:'center'}}>
-            <TouchableOpacity
-              onPress={() => {
+            <View style={{ flexDirection: "column", justifyContent: 'center', alignContent: 'center' }}>
+              <TouchableOpacity
+                onPress={() => {
 
-                //this.setModalVisible(true);
-                if (editable) {
-                  this.setState({ editable: false });
-                } else {
-                  this.setState({ editable: true });
-                }
-                if (btnEditText !== 'Start Finding') {
-                  this.setState({ btnEditText: 'Start Finding' });
-                  this.stopJob();
-                } else {
-                  this.setState({ btnEditText: 'Stop' });
-                  this.startJob();
-                }
-              }}
-            >
-              <View
-                style={[
-                  styles.button,
-                  {
-                    backgroundColor: '#3ddc84',
-                    width: '65%',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    borderColor: '#fff',
-                  },
-                ]}
+                  //this.setModalVisible(true);
+                  if (editable) {
+                    this.setState({ editable: false });
+                  } else {
+                    this.setState({ editable: true });
+                  }
+                  if (btnEditText !== 'Start Finding') {
+                    this.setState({ btnEditText: 'Start Finding' });
+                    this.stopJob();
+                  } else {
+                    this.setState({ btnEditText: 'Stop' });
+                    this.startJob();
+                  }
+                }}
               >
-                <Text style={{ color: '#fff', padding: 5, }}>
-                  {btnEditText}
-                </Text>
-              </View>
-            </TouchableOpacity>
-            
-            <TouchableOpacity
-              onPress={() => {
-                NavigationService.navigate("RequestScreen");
-              }}
-            >
-              <View
-                style={[
-                  styles.button,
-                  {
-                    backgroundColor: '#3ddc84',
-                    width: '65%',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    borderColor: '#fff',
-                    marginBottom:35,
-                  },
-                ]}
+                <View
+                  style={[
+                    styles.button,
+                    {
+                      backgroundColor: '#3ddc84',
+                      width: '65%',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      borderColor: '#fff',
+                    },
+                  ]}
+                >
+                  <Text style={{ color: '#fff', padding: 5, }}>
+                    {btnEditText}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => {
+                  NavigationService.navigate("RequestScreen");
+                }}
               >
-                <Text style={{ color: '#fff', padding: 5, }}>
-                  start working
+                <View
+                  style={[
+                    styles.button,
+                    {
+                      backgroundColor: '#3ddc84',
+                      width: '65%',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      borderColor: '#fff',
+                      marginBottom: 35,
+                    },
+                  ]}
+                >
+                  <Text style={{ color: '#fff', padding: 5, }}>
+                    start working
                 </Text>
-              </View>
-            </TouchableOpacity>
+                </View>
+              </TouchableOpacity>
 
             </View>
 
           </View>
-
-
-
 
           <View style={styles.centeredView}>
             <Modal animationType="slide"
@@ -393,7 +393,7 @@ export default class NewHomeScreen extends React.Component {
           </View>
 
 
-          
+
         </View>
 
       </SafeAreaView>
@@ -435,7 +435,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     marginTop: 50,
     bottom: 0,
-    position: "absolute",
 
   },
   text: {
@@ -511,7 +510,7 @@ const styles = StyleSheet.create({
     //marginRight: 20
 
   },
-  
+
   headerPopUp: {
     fontSize: 20,
     fontWeight: "800",
@@ -530,7 +529,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 20,
-    width: Dimensions.get ('screen').width * 8 / 10,
+    width: Dimensions.get('screen').width * 8 / 10,
   },
 
   buttonCancelView: {
@@ -539,7 +538,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
-    width: Dimensions.get ('screen').width * 8 / 10,
+    width: Dimensions.get('screen').width * 8 / 10,
   },
 
 })

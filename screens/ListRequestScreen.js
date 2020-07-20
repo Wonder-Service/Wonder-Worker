@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import {
   View, Image, StyleSheet, Text,
   TouchableOpacity, Modal, Alert, Button,
-  SafeAreaView, AsyncStorage, Dimensions, FlatList, ActivityIndicator, TouchableHighlight,
+  SafeAreaView, AsyncStorage, Dimensions, FlatList, ActivityIndicator, TouchableHighlight, ScrollView,
 } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -12,25 +12,36 @@ import NavigationService from '../service/navigation';
 import registerForPushNotificationsAsync from '../service/notification';
 import * as Permissions from 'expo-permissions';
 import * as Location from 'expo-location';
-import { PUT, POST, POSTLOGIN, POST_NOBODY, GET } from '../api/caller';
+import { PUT, POST, POSTLOGIN, POST_NOBODY, GET, POST_NOTI } from '../api/caller';
 import {
   ACCEPT_ORDER_ENDPOINT,
   ORDER_GET_BY_SKILL_ENDPOINT,
   USER_ENDPOINT,
+  USER_GET_PROFILE_ENDPOINT,
+  NOTIFICATION_TYPE_REQEST,
+  NOTIFICATION_TYPE_ACCEPT,
+  POST_NOTIFICATION_ENDPOINT,
+  DEVICEID_ENDPOINT,
+
 } from '../api/endpoint';
 import { TextInput } from 'react-native-gesture-handler';
 import { Octicons } from '@expo/vector-icons';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Entypo } from '@expo/vector-icons';
+import moment from 'moment';
+
+
+
 
 class FlatListItem extends React.Component {
+
 
   constructor(props) {
     super(props);
     this.state = {
       isLoading: true,
       emptyData: [],
-      listCustomer:[],
+      listCustomer: [],
       modalVisible: false,
       editable: false,
       btnEditText: "Stop",
@@ -41,49 +52,103 @@ class FlatListItem extends React.Component {
       customerID: "",
       customerName: "",
       customerAddress: "",
+      customerDeviceId: "",
       customerPhone: "",
-      orderDevice:"",
+      orderDevice: "",
+      modalName: "",
+      notification: 1,
+      data: {
+        notificationType: 'abc',
+        workerId: '',
+        diagnoseMess: 'abc',
+        price: 'abc',
+        orderId: '',
+      },
     }
   };
 
 
+  handleAccept = async () => {
 
-  // get user information
-  async componentDidMount() {
-    //get jwt
-    //load profile data 
-    await GET(USER_ENDPOINT, {}, {}).then(
-      (resJson) => {
-        for (var i = 0; i < resJson.length; i++) {
-            this.state.listCustomer.push(resJson[i]);
+    this.state.data.orderId = this.state.orderID;
+    console.log("^^ID order : " + this.state.data.orderId);
+    this.state.data.notificationType = NOTIFICATION_TYPE_REQEST;
+
+    console.log("^^ID worker of ID: " + this.state.data.workerId);
+
+    let param = {
+      to: 'ExponentPushToken[' + this.state.customerDeviceId + ']',
+      title: 'FixxySystem App Notificaiton',
+      subtitle: 'worker notifcation',
+      body: 'You have a new notifcation',
+      data: this.state.data,
+    };
+    //send notification to customer
+    console.log(param);
+    const token = await await Notifications.getExpoPushTokenAsync();
+    await POST_NOTI(POST_NOTIFICATION_ENDPOINT, {}, {}, param)
+      .then(res => {
+        console.log('receive Response success!');
+        console.log("Response Status: " + res.status);
+        if (res.status === 200) {
+          // waiting for customer accept
+          console.log('Send Request susscess');
+          NavigationService.navigate('MapDirection', this.state.notification);
+          this.setModalVisible(false);
         }
-        this.setState({
-          isLoading: false,
-        });
-      }
-
-    );
+      })
+      .catch(err => console.log(err));
   };
+
+  // enableNotification = async () => {
+  //   registerForPushNotificationsAsync();
+  //   let token = await AsyncStorage.getItem('device_id');
+
+  //   this._notificationSubscription = Notifications.addListener(async noti => {
+  //     console.log("we had a notice")
+  //     this.setState({ notification: noti.data });
+  //     console.log(this.state.notification)
+  //     if (
+  //       this.state.notification.notificationType === NOTIFICATION_TYPE_ACCEPT
+  //     ) {
+  //       console.log('Receive NOTIFICATION REQUEST FROM CUSTOMER');
+  //       NavigationService.navigate('MapDirection', this.state.notification);
+  //       this.setModalVisible(false);
+  //     }
+  //   });
+  // };
+
 
   setModalVisible = (visible) => {
     this.setState({ modalVisible: visible });
   };
 
 
-  handlerSelectCatogery = (orderId,customerId,deviceName,description) => {
+  async componentDidMount() {
+    //get jwt
+    //load profile data 
+    await GET(USER_GET_PROFILE_ENDPOINT, {}, {})
+
+      .then(res => {
+        this.state.data.workerId = res[0].id
+
+      })
+  }
+
+
+  handlerSelectCatogery = (orderId, deviceName, description, customerName, customerPhone, customerAddress, customerDeviceId, modalName) => {
     this.setState({ modalVisible: true });
     this.setState({ orderID: orderId, })
-    this.setState({orderDescription: description,})
-    this.setState({ orderDevice: deviceName})
-    for (var i = 0; i < this.state.listCustomer.length; i++) {
-      if (this.state.listCustomer[i].id == customerId) {
-        this.setState({ customerName: this.state.listCustomer[i].fullname })
-        this.setState({ customerPhone: this.state.listCustomer[i].phone })
-        this.setState({ customerAddress: this.state.listCustomer[i].address })
-      }
-    }
-
+    this.setState({ orderDescription: description, })
+    this.setState({ orderDevice: deviceName })
+    this.setState({ customerName: customerName })
+    this.setState({ customerPhone: customerPhone })
+    this.setState({ customerAddress: customerAddress })
+    this.setState({ customerDeviceId: customerDeviceId })
+    this.setState({ modalName: modalName })
   };
+
+
   render() {
 
     const {
@@ -93,18 +158,37 @@ class FlatListItem extends React.Component {
       customerName,
       customerAddress,
       customerPhone,
+      modalName,
     } = this.state;
+
+    for (var i = 0; i < this.props.item.length; i++) {
+      console.log("    ")
+      console.log("Description : " + this.props.item[i].workDescription.description)
+      console.log("Status :" + this.props.item[i].status)
+      console.log("Name Device :" + this.props.item[i].nameDevice)
+      console.log(" ")
+    }
 
     return (
       <View>
         <TouchableOpacity
           onPress={() => {
-            this.handlerSelectCatogery(this.props.item.id, this.props.item.workDescription.customerId, this.props.item.nameDevice,
-              this.props.item.workDescription.description)
-            
-            console.log(this.props.item.nameDevice)
-            console.log("Customer ID from order: "+this.props.item.workDescription.customerId)
-          //  console.log(this.props.customerName)
+            this.handlerSelectCatogery(
+              this.props.item.id,
+              this.props.item.nameDevice,
+              this.props.item.workDescription.description,
+              this.props.item.customer.fullname,
+              this.props.item.customer.phone,
+              this.props.item.customer.address,
+              this.props.item.customer.deviceId,
+              this.props.item.customer.skills.description,
+            )
+            console.log("********")
+            console.log("Customer device id: " + this.props.item.customer.deviceId)
+            console.log("Customer full name: " + this.props.item.customer.fullname)
+            console.log("Modal Name: " + this.props.item.customer.skills.description,)
+            console.log("Worker ID : :" + this.state.data.workerId)
+            console.log("********")
           }}
         >
           <View style={styles.itemHandle}>
@@ -112,10 +196,11 @@ class FlatListItem extends React.Component {
               source={require("../assets/images/regItemImage.jpg")}
               style={styles.image}
             />
+
             <View
-              style={{ flexDirection: "column", width: "80%", height: "100%" }}
+              style={{ flexDirection: "column", width: "80%" }}
             >
-                
+
               <Text style={styles.title}>{this.props.item.nameDevice}</Text>
               <Text style={styles.subtitle}>{this.props.item.address}</Text>
               <Text style={styles.subtitle}>
@@ -140,43 +225,86 @@ class FlatListItem extends React.Component {
         >
           <View style={styles.modalView}>
 
-            <View style={{flexDirection:"row",width:"100%",height:130,}}>
-              <Image
-                style={{
-                  width: 100,
-                  height: 100,
-                  marginLeft:10,
-                  borderRadius:100,
-                  opacity:1,
-                }}
-                source={require("../assets/images/popUpPic.png")}
-              />
-              <View>
-                <Text style={{ fontSize: 20, marginLeft: 10 }}>{orderDevice}</Text>
-                <Text style={{ fontSize: 20, marginLeft: 10}}>model name:</Text>
-                <Text style={{ fontSize: 20, marginLeft: 10 }}>{orderDevice}</Text>
-              </View>
+            <Text style={{ fontSize: 25, fontWeight: '800', textAlign: 'center' }}>Order Detail</Text>
+            <View style={{
+              width: Dimensions.get('screen').width * 7 / 10,
+              height: 50,
+              flexDirection: 'row',
+              alignItems: 'center',
+              borderBottomColor: 'grey',
+              borderBottomWidth: 0.6
+            }}>
+              <MaterialIcons name="devices" size={24} color="black" />
+              <Text style={{ fontSize: 20, marginLeft: 5 }}> Device Name: {orderDevice}</Text>
             </View>
-  
-              <Text style={{fontSize:20}}>Address</Text>
-              <View style={{ borderRadius: 20, width: "100%", height: 100, borderWidth: 1, flexDirection: "row",alignContent:"flex-start" }}>
-              <Text style={{ fontSize: 16, marginLeft: 15, marginTop: 10 }}>{customerAddress}</Text>
-              </View>
 
-              <Text style={{fontSize:20}}>Issue</Text>
-              <View style={{ borderRadius: 20, width: "100%", height: 100, borderWidth: 1, flexDirection: "row",alignContent:"flex-start" }}>
-                <Text style={{ fontSize:16,marginLeft:15,marginTop:10 }}>{orderDescription}</Text>
-              </View>
+            <View style={{
+              width: Dimensions.get('screen').width * 7 / 10,
+              height: 50,
+              flexDirection: 'row',
+              alignItems: 'center',
+              borderBottomColor: 'grey',
+              borderBottomWidth: 0.6
+            }}>
+              <Octicons name="issue-opened" size={24} color="black" />
+              <Text style={{ fontSize: 20, marginLeft: 5 }}> Issue: {orderDescription}</Text>
+            </View>
 
-              <Text style={{fontSize:20,marginTop:10}}>Customer Information</Text>
-            <Text style={{ fontSize: 20,marginTop:10}}>Name:{customerName}</Text>
-              <Text style={{ fontSize: 20,marginTop:10 }}>Phone:{customerPhone}</Text>
+            <Text style={{ fontSize: 22, marginTop: 20, fontWeight: '800', textAlign: 'center' }}>Customer Information</Text>
+
+            <View style={{
+              width: Dimensions.get('screen').width * 7 / 10,
+              height: 50,
+              flexDirection: 'row',
+              alignItems: 'center',
+              borderBottomColor: 'grey',
+              borderBottomWidth: 0.6,
+              marginTop: 10
+            }}>
+              <Entypo name="location" size={24} color="black" />
+              <Text style={{ fontSize: 20, marginLeft: 5 }}> Address: {customerAddress}</Text>
+            </View>
+
+            <View style={{
+              width: Dimensions.get('screen').width * 7 / 10,
+              height: 50,
+              flexDirection: 'row',
+              alignItems: 'center',
+              borderBottomColor: 'grey',
+              borderBottomWidth: 0.6,
+              marginTop: 10
+            }}>
+              <FontAwesome name="user" size={24} color="black" />
+              <Text style={{ fontSize: 20, marginLeft: 5 }}> Name: {customerName}</Text>
+            </View>
+
+            <View style={{
+              width: Dimensions.get('screen').width * 7 / 10,
+              height: 50,
+              flexDirection: 'row',
+              alignItems: 'center',
+              borderBottomColor: 'grey',
+              borderBottomWidth: 0.6,
+              marginTop: 10
+            }}>
+              <FontAwesome name="phone-square" size={24} color="black" />
+              <Text style={{ fontSize: 20, marginLeft: 5 }}> Phone: {customerPhone}</Text>
+            </View>
+
+
+            <TouchableOpacity onPress={this.handleAccept}>
+              <View style={styles.buttonView}>
+                <Text style={styles.mainButtonText}>
+                  Accept
+                  </Text>
+              </View>
+            </TouchableOpacity>
 
             <TouchableOpacity
               onPress={() => this.setModalVisible(false)}
             >
-              <View style={styles.buttonView}>
-                <Text style={StyleSheet.mainButtonText}>
+              <View style={styles.buttonCancelView}>
+                <Text style={styles.mainButtonText}>
                   Back
                   </Text>
               </View>
@@ -188,6 +316,8 @@ class FlatListItem extends React.Component {
   }
 }
 
+var currentDate = moment().format("YYYY-MM-DD");
+console.log(currentDate)
 export default class listRequestScreen extends React.Component {
   state = {
     // imageURL : 'https://reactnativecode.com/wp-content/uploads/2017/10/Guitar.jpg',
@@ -203,17 +333,63 @@ export default class listRequestScreen extends React.Component {
     userPhone: "",
   };
 
+
+
   bs = React.createRef();
+
+  handlerRefresh = async () => {
+    // let jwt = await AsyncStorage.getItem ('jwt');
+    // ORDER_GET_BY_SKILL_ENDPOINT OR ACCEPT_ORDER_ENDPOINT
+    this.setState({
+      isLoading: true,
+    });
+
+    // let jwt = await AsyncStorage.getItem ('jwt');
+    // ORDER_GET_BY_SKILL_ENDPOINT OR ACCEPT_ORDER_ENDPOINT
+    await GET(ORDER_GET_BY_SKILL_ENDPOINT, {}, {}).then(
+
+      (resJson) => {
+
+        this.setState({ loadData: [] })
+        for (var i = 0; i < resJson.length; i++) {
+          if (resJson[i].status == 'PROCESSING' && resJson[i].workDescription.dateCreated == currentDate) {
+
+            this.state.loadData.push(resJson[i]);
+          }
+        }
+
+        for (var i = 0; i < this.state.loadData.length; i++) {
+          this.state.listOrder.push(this.state.loadData[i]);
+        }
+        this.state.listOrder.reverse();
+
+        this.setState({
+          isLoading: false,
+        });
+      }
+    );
+  };
 
   // get order by skill
   async componentDidMount() {
     // let jwt = await AsyncStorage.getItem ('jwt');
+    // ORDER_GET_BY_SKILL_ENDPOINT OR ACCEPT_ORDER_ENDPOINT
+    //&& resJson[i].workDescription.dateCreated == currentDate
     await GET(ORDER_GET_BY_SKILL_ENDPOINT, {}, {}).then(
+
       (resJson) => {
         for (var i = 0; i < resJson.length; i++) {
-          if (resJson[i].status == 'PROCESSING')
-          this.state.listOrder.push(resJson[i]);
+          if (resJson[i].status == 'PROCESSING' && resJson[i].workDescription.dateCreated == currentDate) {
+
+            this.state.loadData.push(resJson[i]);
+          }
         }
+
+
+        for (var i = 0; i < this.state.loadData.length; i++) {
+          this.state.listOrder.push(this.state.loadData[i]);
+        }
+
         this.setState({
           isLoading: false,
         });
@@ -247,14 +423,10 @@ export default class listRequestScreen extends React.Component {
         </View>
       );
     }
-
-    for (var i = 0; i < this.state.listOrder.length; i++) {
-      this.state.loadData.push(this.state.listOrder[i]);
-    }
-
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.container}>
+
           {/* Header */}
           <View style={styles.headerInfo}>
             <Text style={{ fontSize: 20, marginLeft: 50 }}>
@@ -275,29 +447,8 @@ export default class listRequestScreen extends React.Component {
           <View style={styles.imageHeader}>
             <TouchableOpacity
               onPress={() => {
-                for (
-                  var i = 0;
-                  i < this.state.loadData.length;
-                  i++
-                ) {
-                  var index = this.state.loadData.indexOf(
-                    this.state.loadData[i]
-                  );
-                  if (index > -1) {
-                    this.state.loadData.splice(index, 1);
-                    this.state.loadData.d;
-                  }
-                  i++;
-                }
-                for (
-                  var i = 0;
-                  i < this.state.listOrder.length;
-                  i++
-                ) {
-                  this.state.loadData.push(
-                    this.state.listOrder[i]
-                  );
-                }
+                this.setState({ listOrder: [] })
+                this.handlerRefresh()
               }}
             >
               <View style={styles.buttonRefresh}>
@@ -322,22 +473,24 @@ export default class listRequestScreen extends React.Component {
           </View>
 
           {/* Body */}
-          <View
-            style={{ flex: 1, width: "100%", marginTop: 20 }}
-          >
-            <FlatList
-              data={this.state.loadData}
-              renderItem={({ item, index }) => {
-                return (
-                  <FlatListItem
-                    item={item}
-                    index={index}
-                  ></FlatListItem>
-                );
-              }}
-              keyExtractor={(item, index) => index.toString()}
-            ></FlatList>
-          </View>
+          <ScrollView style={{ marginTop: "5%" }}>
+            <View
+              style={{ flex: 1, width: "100%", marginTop: 20 }}
+            >
+              <FlatList
+                data={this.state.listOrder}
+                renderItem={({ item, index }) => {
+                  return (
+                    <FlatListItem
+                      item={item}
+                      index={index}
+                    ></FlatListItem>
+                  );
+                }}
+                keyExtractor={(item, index) => index.toString()}
+              ></FlatList>
+            </View>
+          </ScrollView>
 
           {/* Job find */}
           <View style={styles.bodyTextContainer}>
@@ -417,7 +570,7 @@ const styles = StyleSheet.create({
     //marginLeft: 15,
     flexDirection: "row",
     bottom: 0,
-    position: "absolute",
+    // position: "absolute",
   },
   bodyText: {
     fontSize: 18,
@@ -469,7 +622,6 @@ const styles = StyleSheet.create({
     marginBottom: 2,
     marginTop: 10,
     borderRadius: 5,
-    height: 112,
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 1,
@@ -501,21 +653,25 @@ const styles = StyleSheet.create({
   },
 
   modalView: {
-    flex: 1,
+
+    height: "83%",
+    marginTop: "20%",
     margin: 20,
-    backgroundColor: "white",
+    backgroundColor: "#EFEFEF",
     borderColor: "black",
-    borderWidth: 2,
+    borderWidth: 1,
     borderRadius: 20,
     padding: 35,
     //alignItems: "center",
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 12,
     },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
+    shadowOpacity: 0.58,
+    shadowRadius: 16.00,
+
+    elevation: 24,
   },
   modalText: {
     //marginBottom: 15,
@@ -530,10 +686,11 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   centeredView: {
-    flex: 1,
+    // flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    marginTop: 22,
+    // marginTop: 22,
+
   },
 
   inforContainer: {
@@ -555,27 +712,36 @@ const styles = StyleSheet.create({
     //marginLeft: 20,
   },
   mainButtonText: {
-    fontSize: 30,
+    fontSize: 20,
     color: "white",
+
   },
 
   buttonView: {
-    padding: 15,
-    backgroundColor: "rgba(80, 203, 203, 1)",
+    marginTop: 20,
+    backgroundColor: "#2ac17b",
     borderRadius: 20,
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 20,
-    marginRight:10,
+    // alignContent: 'center',
+    // padding: 15,
+    // marginTop: "5%",
+    // marginLeft: "5%",
     width: (Dimensions.get("screen").width * 7) / 10,
+    height: 50
   },
 
   buttonCancelView: {
-    padding: 15,
-    backgroundColor: "#d63d2f",
+    marginTop: 10,
+    backgroundColor: "#f34642",
     borderRadius: 20,
     alignItems: "center",
     justifyContent: "center",
-    width: (Dimensions.get("screen").width * 8) / 10,
+    // alignContent: 'center',
+    // padding: 15,
+    // marginTop: "5%",
+    // marginLeft: "5%",
+    width: (Dimensions.get("screen").width * 7) / 10,
+    height: 50
   },
 });
