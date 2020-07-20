@@ -29,8 +29,22 @@ import { Octicons } from '@expo/vector-icons';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Entypo } from '@expo/vector-icons';
 import moment from 'moment';
+// import * as firebase from 'firebase';
 
 
+// var firebaseConfig = {
+//   apiKey: 'AIzaSyCkUqpsRdN83jH8o2y5ZfQ6VHYOydEPOSQ',
+//   authDomain: 'fixxyworker.firebaseapp.com',
+//   databaseURL: 'https://fixxyworker.firebaseio.com',
+//   projectId: 'fixxyworker',
+//   storageBucket: 'fixxyworker.appspot.com',
+//   messagingSenderId: '492536156918',
+//   appId: '1:492536156918:web:f8d8feaa2c267b261d92d7',
+//   measurementId: 'G-78KBVBX2N2',
+// };
+
+// // Initialize Firebase
+// firebase.initializeApp(firebaseConfig);
 
 
 class FlatListItem extends React.Component {
@@ -68,6 +82,52 @@ class FlatListItem extends React.Component {
   };
 
 
+  // getLocationByCoords = async (coords) => {
+  //   let url = 'https://maps.googleapis.com/maps/api/geocode/json?latlng='
+  //     + coords.latitude + ',' + coords.longitude + '&key=' + GEO_KEY_API;
+  //   await fetch(url, {
+  //     method: 'GET',
+  //   }).then(res => res.json()).then(data => {
+  //     console.log(data.results[0].formatted_address)
+  //     this.setState({ address: data.results[0].formatted_address })
+  //   });
+  // }
+
+
+  // updateLocation = async () => {
+  //   const { status } = await Permissions.askAsync(Permissions.LOCATION);
+  //   let token = await AsyncStorage.getItem('device_id');
+
+  //   if (status != 'granted') {
+  //     const response = await Permissions.askAsync(Permissions.LOCATION);
+  //   }
+
+  //   firebase.database().ref('/' + token).set({
+  //     latitude: this.state.latitude,
+  //     longitude: this.state.longitude,
+  //   });
+
+  //   await Location.watchPositionAsync(
+  //     {
+  //       timeInterval: 3000,
+  //       distanceInterval: 2,
+  //     },
+  //     location => {
+  //       this.setState({
+  //         latitude: location.coords.latitude,
+  //         longitude: location.coords.longitude,
+  //       });
+
+  //       firebase.database().ref('/' + token).set({
+  //         latitude: this.state.latitude,
+  //         longitude: this.state.longitude,
+  //       });
+  //     }
+  //   );
+  // };
+
+
+
   handleAccept = async () => {
 
     this.state.data.orderId = this.state.orderID;
@@ -85,7 +145,7 @@ class FlatListItem extends React.Component {
     };
     //send notification to customer
     console.log(param);
-    const token = await await Notifications.getExpoPushTokenAsync();
+
     await POST_NOTI(POST_NOTIFICATION_ENDPOINT, {}, {}, param)
       .then(res => {
         console.log('receive Response success!');
@@ -93,30 +153,49 @@ class FlatListItem extends React.Component {
         if (res.status === 200) {
           // waiting for customer accept
           console.log('Send Request susscess');
-          NavigationService.navigate('MapDirection', this.state.notification);
-          this.setModalVisible(false);
         }
       })
       .catch(err => console.log(err));
   };
 
-  // enableNotification = async () => {
-  //   registerForPushNotificationsAsync();
-  //   let token = await AsyncStorage.getItem('device_id');
+  // ENABLE NOTIFICATION 
+  enableNotification = async () => {
+    registerForPushNotificationsAsync();
+    let token = await AsyncStorage.getItem('device_id');
 
-  //   this._notificationSubscription = Notifications.addListener(async noti => {
-  //     console.log("we had a notice")
-  //     this.setState({ notification: noti.data });
-  //     console.log(this.state.notification)
-  //     if (
-  //       this.state.notification.notificationType === NOTIFICATION_TYPE_ACCEPT
-  //     ) {
-  //       console.log('Receive NOTIFICATION REQUEST FROM CUSTOMER');
-  //       NavigationService.navigate('MapDirection', this.state.notification);
-  //       this.setModalVisible(false);
-  //     }
-  //   });
-  // };
+    this._notificationSubscription = Notifications.addListener(async noti => {
+      console.log("we had a noti")
+      this.setState({ notification: noti.data });
+      console.log(this.state.notification)
+      // if (
+      //   this.state.notification.notificationType === NOTIFICATION_TYPE_REQEST
+      // ) {
+      //   console.log(this.state.notification);
+      //   // await GET(
+      //   //   USER_ENDPOINT + '/' + noti.data.customerId,
+      //   //   {},
+      //   //   {}
+      //   // ).then(res => {
+      //   //   this.setState({
+      //   //     customer: {
+      //   //       name: res.fullname,
+      //   //       phone: res.phone
+      //   //     }
+      //   //   })
+      //   // })
+
+      //   await this.getLocationByCoords
+
+      // } else 
+      if (
+        this.state.notification.notificationType === NOTIFICATION_TYPE_ACCEPT
+      ) {
+        console.log('Receive NOTIFICATION REQUEST FROM CUSTOMER');
+        NavigationService.navigate('MapDirection', this.state.notification);
+        this.setModalVisible(false);
+      }
+    });
+  };
 
 
   setModalVisible = (visible) => {
@@ -131,12 +210,15 @@ class FlatListItem extends React.Component {
 
       .then(res => {
         this.state.data.workerId = res[0].id
-
       })
+
+    // await this.updateLocation();
   }
 
 
-  handlerSelectCatogery = (orderId, deviceName, description, customerName, customerPhone, customerAddress, customerDeviceId, modalName) => {
+
+
+  handlerSelectCatogery = async (orderId, deviceName, description, customerName, customerPhone, customerAddress, customerDeviceId, modalName) => {
     this.setState({ modalVisible: true });
     this.setState({ orderID: orderId, })
     this.setState({ orderDescription: description, })
@@ -146,6 +228,7 @@ class FlatListItem extends React.Component {
     this.setState({ customerAddress: customerAddress })
     this.setState({ customerDeviceId: customerDeviceId })
     this.setState({ modalName: modalName })
+    await this.enableNotification();
   };
 
 
@@ -161,15 +244,9 @@ class FlatListItem extends React.Component {
       modalName,
     } = this.state;
 
-    for (var i = 0; i < this.props.item.length; i++) {
-      console.log("    ")
-      console.log("Description : " + this.props.item[i].workDescription.description)
-      console.log("Status :" + this.props.item[i].status)
-      console.log("Name Device :" + this.props.item[i].nameDevice)
-      console.log(" ")
-    }
 
     return (
+
       <View>
         <TouchableOpacity
           onPress={() => {
@@ -184,10 +261,8 @@ class FlatListItem extends React.Component {
               this.props.item.customer.skills.description,
             )
             console.log("********")
-            console.log("Customer device id: " + this.props.item.customer.deviceId)
-            console.log("Customer full name: " + this.props.item.customer.fullname)
-            console.log("Modal Name: " + this.props.item.customer.skills.description,)
-            console.log("Worker ID : :" + this.state.data.workerId)
+            console.log("Date create : :" + this.props.item.workDescription.dateCreated)
+            console.log("Worker ID :" + this.state.data.workerId)
             console.log("********")
           }}
         >
@@ -202,6 +277,7 @@ class FlatListItem extends React.Component {
             >
 
               <Text style={styles.title}>{this.props.item.nameDevice}</Text>
+
               <Text style={styles.subtitle}>{this.props.item.address}</Text>
               <Text style={styles.subtitle}>
                 {this.props.item.workDescription.dateCreated}
@@ -317,6 +393,7 @@ class FlatListItem extends React.Component {
 }
 
 var currentDate = moment().format("YYYY-MM-DD");
+
 console.log(currentDate)
 export default class listRequestScreen extends React.Component {
   state = {
@@ -389,6 +466,7 @@ export default class listRequestScreen extends React.Component {
         for (var i = 0; i < this.state.loadData.length; i++) {
           this.state.listOrder.push(this.state.loadData[i]);
         }
+        this.state.listOrder.reverse();
 
         this.setState({
           isLoading: false,
@@ -631,7 +709,7 @@ const styles = StyleSheet.create({
   },
 
   title: {
-    fontSize: 23,
+    fontSize: 18,
     fontWeight: "700",
     padding: 10,
     color: "#000",

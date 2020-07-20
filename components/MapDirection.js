@@ -1,4 +1,4 @@
-import React, {Component} from 'react';
+import React, { Component } from 'react';
 import MapView from 'react-native-maps';
 import * as Permissions from 'expo-permissions';
 import * as Location from 'expo-location';
@@ -12,8 +12,8 @@ import {
   TouchableOpacity,
   AsyncStorage,
 } from 'react-native';
-import {dismissAuthSession} from 'expo-web-browser';
-import {POST, POSTLOGIN, GET, PUT, POST_NOBODY} from '../api/caller';
+import { dismissAuthSession } from 'expo-web-browser';
+import { POST, POSTLOGIN, GET, PUT, POST_NOBODY } from '../api/caller';
 import {
   CANCEL_ORDER_ENDPOINT,
   POST_NOTIFICATION_ENDPOINT,
@@ -24,7 +24,7 @@ import {
 } from '../api/endpoint';
 import DropdownAlert from 'react-native-dropdownalert';
 import { Notifications } from 'expo';
-import {NavigationEvents} from 'react-navigation';
+import { NavigationEvents } from 'react-navigation';
 
 export default class MapDirection extends Component {
   state = {
@@ -51,29 +51,29 @@ export default class MapDirection extends Component {
     title: 'FixxySystem App Notificaiton',
     subtitle: 'worker notifcation',
     body: 'You have a new notifcation',
-    data : {
+    data: {
       notificationType: 'abc',
       workerId: 'abc',
       diagnoseMess: 'abc',
       price: 'abc',
     },
     catogery: 'notification'
-  }    
+  }
 
 
 
   initScreen = async () => {
-    const {status} = await Permissions.askAsync (Permissions.LOCATION);
+    const { status } = await Permissions.askAsync(Permissions.LOCATION);
     console.log("map direction")
-    console.log(this.props.navigation.state.params) 
+    console.log(this.props.navigation.state.params)
     if (status != 'granted') {
-      const response = await Permissions.askAsync (Permissions.LOCATION);
+      const response = await Permissions.askAsync(Permissions.LOCATION);
     }
 
-    const location = await Location.getCurrentPositionAsync ({});
-    this.setState({currentLocation: location})
-    this._notificationSubscription = Notifications.addListener (noti => {
-      this.setState ({notification: noti.data});
+    const location = await Location.getCurrentPositionAsync({});
+    this.setState({ currentLocation: location })
+    this._notificationSubscription = Notifications.addListener(noti => {
+      this.setState({ notification: noti.data });
       if (this.state.notification.notificationType === NOTIFICATION_TYPE_CANCEL) {
         this.props.navigation.goBack();
       }
@@ -83,44 +83,46 @@ export default class MapDirection extends Component {
   }
 
   getDestinationCoords = async () => {
-   
+
     const orderId = await AsyncStorage.getItem('orderId')
-    await GET(ACCEPT_ORDER_ENDPOINT + '/'+ orderId 
-    ,{},{} ).then(res => {
-      console.log(res)
-      if(res.lat != null ) {
-        this.setState({destinationCoords: {
-          latitude: res.lat,
-          longitude: res.lng
-        }})
-      }
-    }).catch(error => {console.log(error)})
+    await GET(ACCEPT_ORDER_ENDPOINT + '/' + orderId
+      , {}, {}).then(res => {
+        console.log(res)
+        if (res.lat != null) {
+          this.setState({
+            destinationCoords: {
+              latitude: res.lat,
+              longitude: res.lng
+            }
+          })
+        }
+      }).catch(error => { console.log(error) })
     console.log(this.state.destinationCoords)
   }
 
   handleCancel = async () => {
-    let orderId = await AsyncStorage.getItem ('orderId');
-    await POST_NOBODY (
+    let orderId = await AsyncStorage.getItem('orderId');
+    await POST_NOBODY(
       CANCEL_ORDER_ENDPOINT,
       {},
       {},
       {
         orderId: orderId,
       }
-    ).then (res => {
-        this.props.navigation.goBack ();
+    ).then(res => {
+      this.props.navigation.goBack();
     });
   };
 
   handleComplete = async () => {
     //API complete 
     let orderId = await AsyncStorage.getItem('orderId');
-    await PUT (ORDER_COMPLETE_ENDPOINT + '/'+ orderId + '/status-complete', {}, {}).then (res => {
-        NavigationService.navigate ('HomeScreen');
+    await PUT(ORDER_COMPLETE_ENDPOINT + '/' + orderId + '/status-complete', {}, {}).then(res => {
+      NavigationService.navigate('HomeScreen');
     });
   };
 
-  render () {
+  render() {
     const {
       latitude,
       longitude,
@@ -156,7 +158,7 @@ export default class MapDirection extends Component {
               strokeWidth={3}
               strokeColor="blue"
               errorMessage={error => {
-                console.log (error);
+                console.log(error);
               }}
             />
 
@@ -178,7 +180,7 @@ export default class MapDirection extends Component {
     }
   }
 }
-const styles = StyleSheet.create ({
+const styles = StyleSheet.create({
   container: {
     flex: 1,
     flexDirection: 'column-reverse',
@@ -194,15 +196,15 @@ const styles = StyleSheet.create ({
     padding: 20,
     backgroundColor: '#fff',
     alignItems: 'center',
-    width: Dimensions.get ('screen').width,
-    height: Dimensions.get ('screen').height * 7 / 10,
+    width: Dimensions.get('screen').width,
+    height: Dimensions.get('screen').height * 7 / 10,
 
     // justifyContent: 'center',
   },
 
   groupButton: {
-    height: Dimensions.get ('screen').height / 2,
-    width: Dimensions.get ('screen').width * 9 / 10,
+    height: Dimensions.get('screen').height / 2,
+    width: Dimensions.get('screen').width * 9 / 10,
     backgroundColor: '#E5E5E5',
     alignItems: 'center',
     justifyContent: 'center',
@@ -220,7 +222,7 @@ const styles = StyleSheet.create ({
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 20,
-    width: Dimensions.get ('screen').width * 8 / 10,
+    width: Dimensions.get('screen').width * 8 / 10,
   },
   buttonCancelView: {
     padding: 15,
@@ -229,7 +231,7 @@ const styles = StyleSheet.create ({
     borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
-    width: Dimensions.get ('screen').width * 8 / 10,
+    width: Dimensions.get('screen').width * 8 / 10,
   },
   buttonCompleteView: {
     padding: 15,
@@ -238,6 +240,6 @@ const styles = StyleSheet.create ({
     borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
-    width: Dimensions.get ('screen').width * 8 / 10,
+    width: Dimensions.get('screen').width * 8 / 10,
   },
 });
