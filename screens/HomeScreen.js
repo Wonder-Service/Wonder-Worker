@@ -30,19 +30,19 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Entypo } from '@expo/vector-icons';
 
 
-// var firebaseConfig = {
-//   apiKey: 'AIzaSyCkUqpsRdN83jH8o2y5ZfQ6VHYOydEPOSQ',
-//   authDomain: 'fixxyworker.firebaseapp.com',
-//   databaseURL: 'https://fixxyworker.firebaseio.com',
-//   projectId: 'fixxyworker',
-//   storageBucket: 'fixxyworker.appspot.com',
-//   messagingSenderId: '492536156918',
-//   appId: '1:492536156918:web:f8d8feaa2c267b261d92d7',
-//   measurementId: 'G-78KBVBX2N2',
-// };
+var firebaseConfig = {
+  apiKey: 'AIzaSyCkUqpsRdN83jH8o2y5ZfQ6VHYOydEPOSQ',
+  authDomain: 'fixxyworker.firebaseapp.com',
+  databaseURL: 'https://fixxyworker.firebaseio.com',
+  projectId: 'fixxyworker',
+  storageBucket: 'fixxyworker.appspot.com',
+  messagingSenderId: '492536156918',
+  appId: '1:492536156918:web:f8d8feaa2c267b261d92d7',
+  measurementId: 'G-78KBVBX2N2',
+};
 
-// // Initialize Firebase
-// firebase.initializeApp(firebaseConfig);
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
 
 
 export default class NewHomeScreen extends React.Component {
@@ -106,16 +106,16 @@ export default class NewHomeScreen extends React.Component {
     await this.updateLocation();
   };
 
-  // getLocationByCoords = async (coords) => {
-  //   let url = 'https://maps.googleapis.com/maps/api/geocode/json?latlng='
-  //     + coords.latitude + ',' + coords.longitude + '&key=' + GEO_KEY_API;
-  //   await fetch(url, {
-  //     method: 'GET',
-  //   }).then(res => res.json()).then(data => {
-  //     console.log(data.results[0].formatted_address)
-  //     this.setState({ address: data.results[0].formatted_address })
-  //   });
-  // }
+  getLocationByCoords = async (coords) => {
+    let url = 'https://maps.googleapis.com/maps/api/geocode/json?latlng='
+      + coords.latitude + ',' + coords.longitude + '&key=' + GEO_KEY_API;
+    await fetch(url, {
+      method: 'GET',
+    }).then(res => res.json()).then(data => {
+      console.log(data.results[0].formatted_address)
+      this.setState({ address: data.results[0].formatted_address })
+    });
+  }
 
   enableNotification = async () => {
     registerForPushNotificationsAsync();
@@ -142,7 +142,7 @@ export default class NewHomeScreen extends React.Component {
         //   })
         // })
 
-        // await this.getLocationByCoords
+        await this.getLocationByCoords
         this.setModalVisible(true);
 
       } else if (
@@ -155,37 +155,37 @@ export default class NewHomeScreen extends React.Component {
     });
   };
 
-  // updateLocation = async () => {
-  //   const { status } = await Permissions.askAsync(Permissions.LOCATION);
-  //   let token = await AsyncStorage.getItem('device_id');
+  updateLocation = async () => {
+    const { status } = await Permissions.askAsync(Permissions.LOCATION);
+    let token = await AsyncStorage.getItem('device_id');
 
-  //   if (status != 'granted') {
-  //     const response = await Permissions.askAsync(Permissions.LOCATION);
-  //   }
+    if (status != 'granted') {
+      const response = await Permissions.askAsync(Permissions.LOCATION);
+    }
 
-  //   firebase.database().ref('/' + token).set({
-  //     latitude: this.state.latitude,
-  //     longitude: this.state.longitude,
-  //   });
+    firebase.database().ref('/' + token).set({
+      latitude: this.state.latitude,
+      longitude: this.state.longitude,
+    });
 
-  //   await Location.watchPositionAsync(
-  //     {
-  //       timeInterval: 3000,
-  //       distanceInterval: 2,
-  //     },
-  //     location => {
-  //       this.setState({
-  //         latitude: location.coords.latitude,
-  //         longitude: location.coords.longitude,
-  //       });
+    await Location.watchPositionAsync(
+      {
+        timeInterval: 3000,
+        distanceInterval: 2,
+      },
+      location => {
+        this.setState({
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude,
+        });
 
-  //       firebase.database().ref('/' + token).set({
-  //         latitude: this.state.latitude,
-  //         longitude: this.state.longitude,
-  //       });
-  //     }
-  //   );
-  // };
+        firebase.database().ref('/' + token).set({
+          latitude: this.state.latitude,
+          longitude: this.state.longitude,
+        });
+      }
+    );
+  };
 
   handleAccept = async () => {
     const { notification } = this.state;

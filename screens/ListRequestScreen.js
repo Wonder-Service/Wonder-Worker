@@ -1,66 +1,184 @@
 import React, { Component } from 'react';
 import {
   View, Image, StyleSheet, Text,
-  TouchableOpacity, Modal, Alert, Button,
-  SafeAreaView, AsyncStorage, Dimensions, FlatList, ActivityIndicator, TouchableHighlight, ScrollView,
+  TouchableOpacity, Modal,
+  SafeAreaView, Dimensions, FlatList, ActivityIndicator, ScrollView,
 } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Notifications } from 'expo';
-import BottomSheet from 'reanimated-bottom-sheet';
 import NavigationService from '../service/navigation';
 import registerForPushNotificationsAsync from '../service/notification';
-import * as Permissions from 'expo-permissions';
-import * as Location from 'expo-location';
-import { PUT, POST, POSTLOGIN, POST_NOBODY, GET, POST_NOTI } from '../api/caller';
+
+import { GET, POST_NOTI } from '../api/caller';
 import {
-  ACCEPT_ORDER_ENDPOINT,
   ORDER_GET_BY_SKILL_ENDPOINT,
-  USER_ENDPOINT,
   USER_GET_PROFILE_ENDPOINT,
   NOTIFICATION_TYPE_REQEST,
   NOTIFICATION_TYPE_ACCEPT,
   POST_NOTIFICATION_ENDPOINT,
-  DEVICEID_ENDPOINT,
-
 } from '../api/endpoint';
-import { TextInput } from 'react-native-gesture-handler';
 import { Octicons } from '@expo/vector-icons';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Entypo } from '@expo/vector-icons';
 import moment from 'moment';
-// import * as firebase from 'firebase';
+
+var currentDate = moment().format("YYYY-MM-DD");
 
 
-// var firebaseConfig = {
-//   apiKey: 'AIzaSyCkUqpsRdN83jH8o2y5ZfQ6VHYOydEPOSQ',
-//   authDomain: 'fixxyworker.firebaseapp.com',
-//   databaseURL: 'https://fixxyworker.firebaseio.com',
-//   projectId: 'fixxyworker',
-//   storageBucket: 'fixxyworker.appspot.com',
-//   messagingSenderId: '492536156918',
-//   appId: '1:492536156918:web:f8d8feaa2c267b261d92d7',
-//   measurementId: 'G-78KBVBX2N2',
-// };
-
-// // Initialize Firebase
-// firebase.initializeApp(firebaseConfig);
-
-
-class FlatListItem extends React.Component {
-
+export default class listRequestScreen extends React.Component {
+  _isMounted = false;
 
   constructor(props) {
     super(props);
     this.state = {
       isLoading: true,
-      emptyData: [],
-      listCustomer: [],
-      modalVisible: false,
-      editable: false,
-      btnEditText: "Stop",
+      listOrder: [],
+      loadData: [],
       latitude: null,
       longitude: null,
+      orderID: "",
+      orderDescription: "",
+      userName: "",
+      userAddress: "",
+      userPhone: "",
+      notification: 1,
+    };
+  }
+  bs = React.createRef();
+
+  handlerRefresh = async () => {
+    this.setState({ isLoading: true });
+    await GET(ORDER_GET_BY_SKILL_ENDPOINT, {}, {}).then(
+
+      (resJson) => {
+        this.setState({ loadData: [], listOrder: [] })
+        for (var i = 0; i < resJson.length; i++) {
+          if (resJson[i].status == 'PROCESSING' && resJson[i].workDescription.dateCreated == currentDate) {
+            this.state.loadData.push(resJson[i]);
+          }
+        }
+        for (var i = 0; i < this.state.loadData.length; i++) {
+          this.state.listOrder.push(this.state.loadData[i]);
+        }
+        this.state.listOrder.reverse();
+        this.setState({ isLoading: false, });
+      }
+    );
+  };
+
+  enableNotification = async () => {
+    registerForPushNotificationsAsync();
+    this._notificationSubscription = Notifications.addListener(async noti => {
+      console.log("we had a noti")
+      this.setState({ notification: noti.data });
+      console.log(this.state.notification)
+      if (this.state.notification.notificationType === NOTIFICATION_TYPE_REQEST) {
+        this.handlerRefresh()
+      } else if (this.state.notification.notificationType === NOTIFICATION_TYPE_ACCEPT) {
+        console.log('Receive NOTIFICATION REQUEST FROM CUSTOMER');
+        NavigationService.navigate('MapDirection', this.state.notification);
+      }
+    });
+  };
+
+  // get order by skill
+  async componentDidMount() {
+    this._isMounted = true;
+    await GET(ORDER_GET_BY_SKILL_ENDPOINT, {}, {}).then(
+      (resJson) => {
+        if (this._isMounted) {
+          this.setState({ loadData: [], listOrder: [] })
+          for (var i = 0; i < resJson.length; i++) {
+            if (resJson[i].status == 'PROCESSING' && resJson[i].workDescription.dateCreated == currentDate) {
+              this.state.loadData.push(resJson[i]);
+            }
+          }
+          for (var i = 0; i < this.state.loadData.length; i++) {
+            this.state.listOrder.push(this.state.loadData[i]);
+          }
+          this.state.listOrder.reverse();
+
+          this.setState({ isLoading: false, });
+        }
+      }
+    );
+    await this.enableNotification();
+  }
+
+  componentWillUnmount() {
+    this._isMounted = false;
+  }
+
+  render() {
+    if (this.state.isLoading) {
+      return (
+        <View style={{ flex: 1, backgroundColor: "#fff", alignItems: "center", justifyContent: "center", }}>
+          <View>
+            <ActivityIndicator size="large" />
+          </View>
+        </View>
+      );
+    }
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.container}>
+          {/* Header */}
+          <View style={styles.headerInfo}>
+            <Text style={{ fontSize: 20 }}>List Request</Text>
+          </View>
+          {/* Refresh button */}
+          <View style={styles.imageHeader}>
+            <TouchableOpacity onPress={() => { this.handlerRefresh() }} >
+              <View style={styles.buttonRefresh}>
+                <Image style={{ width: 20, height: 20, }} source={require("../assets/images/refreshButton.png")} />
+                <Text style={{ color: "#fff", marginLeft: 10, fontSize: 20, }}>Refresh</Text>
+              </View>
+            </TouchableOpacity>
+          </View>
+
+          {/* Body */}
+          <ScrollView style={{ marginTop: "5%" }}>
+            <View style={{ flex: 1, width: "100%", marginTop: 20 }}>
+              <FlatList
+                data={this.state.listOrder}
+                renderItem={({ item, index }) => {
+                  return (
+                    <FlatListItem
+                      item={item}
+                      index={index}
+                    />
+                  );
+                }}
+                keyExtractor={(item, index) => index.toString()}
+              />
+            </View>
+          </ScrollView>
+
+          {/* Job find */}
+          <View style={styles.bodyTextContainer}>
+            <Text style={styles.bodyText}>Let's Start Working!!</Text>
+            <TouchableOpacity onPress={() => { NavigationService.navigate("Home") }}>
+              <View style={styles.bodyButton}>
+                <Text style={{ color: "#fff", padding: 5 }}> stop</Text>
+              </View>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </SafeAreaView>
+    );
+  }
+}
+
+class FlatListItem extends React.Component {
+
+  constructor(props) {
+    super(props);
+    this.state = {
+      modalVisible: false,
+      latitude: null,
+      longitude: null,
+      notification: 1,
       orderID: "",
       orderDescription: "",
       customerID: "",
@@ -70,7 +188,6 @@ class FlatListItem extends React.Component {
       customerPhone: "",
       orderDevice: "",
       modalName: "",
-      notification: 1,
       data: {
         notificationType: 'abc',
         workerId: '',
@@ -81,61 +198,29 @@ class FlatListItem extends React.Component {
     }
   };
 
-
-  // getLocationByCoords = async (coords) => {
-  //   let url = 'https://maps.googleapis.com/maps/api/geocode/json?latlng='
-  //     + coords.latitude + ',' + coords.longitude + '&key=' + GEO_KEY_API;
-  //   await fetch(url, {
-  //     method: 'GET',
-  //   }).then(res => res.json()).then(data => {
-  //     console.log(data.results[0].formatted_address)
-  //     this.setState({ address: data.results[0].formatted_address })
-  //   });
-  // }
-
-
-  // updateLocation = async () => {
-  //   const { status } = await Permissions.askAsync(Permissions.LOCATION);
-  //   let token = await AsyncStorage.getItem('device_id');
-
-  //   if (status != 'granted') {
-  //     const response = await Permissions.askAsync(Permissions.LOCATION);
-  //   }
-
-  //   firebase.database().ref('/' + token).set({
-  //     latitude: this.state.latitude,
-  //     longitude: this.state.longitude,
-  //   });
-
-  //   await Location.watchPositionAsync(
-  //     {
-  //       timeInterval: 3000,
-  //       distanceInterval: 2,
-  //     },
-  //     location => {
-  //       this.setState({
-  //         latitude: location.coords.latitude,
-  //         longitude: location.coords.longitude,
-  //       });
-
-  //       firebase.database().ref('/' + token).set({
-  //         latitude: this.state.latitude,
-  //         longitude: this.state.longitude,
-  //       });
-  //     }
-  //   );
-  // };
+  unableNotification = async () => {
+    registerForPushNotificationsAsync();
+    this._notificationSubscription = Notifications.addListener(async noti => {
+      this.setState({ notification: noti.data });
+      if (this.state.notification.notificationType === NOTIFICATION_TYPE_ACCEPT) {
+        console.log('Receive NOTIFICATION REQUEST FROM CUSTOMER');
+        this.setModalVisible(false)
+        this.state.notification = ''
+      }
+    });
+  };
 
 
-
+  setModalVisible = (visible) => {
+    this.setState({ modalVisible: visible });
+  };
   handleAccept = async () => {
-
+    await GET(USER_GET_PROFILE_ENDPOINT, {}, {})
+      .then(res => {
+        this.state.data.workerId = res[0].id
+      })
     this.state.data.orderId = this.state.orderID;
-    console.log("^^ID order : " + this.state.data.orderId);
     this.state.data.notificationType = NOTIFICATION_TYPE_REQEST;
-
-    console.log("^^ID worker of ID: " + this.state.data.workerId);
-
     let param = {
       to: 'ExponentPushToken[' + this.state.customerDeviceId + ']',
       title: 'FixxySystem App Notificaiton',
@@ -145,7 +230,6 @@ class FlatListItem extends React.Component {
     };
     //send notification to customer
     console.log(param);
-
     await POST_NOTI(POST_NOTIFICATION_ENDPOINT, {}, {}, param)
       .then(res => {
         console.log('receive Response success!');
@@ -158,66 +242,6 @@ class FlatListItem extends React.Component {
       .catch(err => console.log(err));
   };
 
-  // ENABLE NOTIFICATION 
-  enableNotification = async () => {
-    registerForPushNotificationsAsync();
-    let token = await AsyncStorage.getItem('device_id');
-
-    this._notificationSubscription = Notifications.addListener(async noti => {
-      console.log("we had a noti")
-      this.setState({ notification: noti.data });
-      console.log(this.state.notification)
-      // if (
-      //   this.state.notification.notificationType === NOTIFICATION_TYPE_REQEST
-      // ) {
-      //   console.log(this.state.notification);
-      //   // await GET(
-      //   //   USER_ENDPOINT + '/' + noti.data.customerId,
-      //   //   {},
-      //   //   {}
-      //   // ).then(res => {
-      //   //   this.setState({
-      //   //     customer: {
-      //   //       name: res.fullname,
-      //   //       phone: res.phone
-      //   //     }
-      //   //   })
-      //   // })
-
-      //   await this.getLocationByCoords
-
-      // } else 
-      if (
-        this.state.notification.notificationType === NOTIFICATION_TYPE_ACCEPT
-      ) {
-        console.log('Receive NOTIFICATION REQUEST FROM CUSTOMER');
-        NavigationService.navigate('MapDirection', this.state.notification);
-        this.setModalVisible(false);
-      }
-    });
-  };
-
-
-  setModalVisible = (visible) => {
-    this.setState({ modalVisible: visible });
-  };
-
-
-  async componentDidMount() {
-    //get jwt
-    //load profile data 
-    await GET(USER_GET_PROFILE_ENDPOINT, {}, {})
-
-      .then(res => {
-        this.state.data.workerId = res[0].id
-      })
-
-    // await this.updateLocation();
-  }
-
-
-
-
   handlerSelectCatogery = async (orderId, deviceName, description, customerName, customerPhone, customerAddress, customerDeviceId, modalName) => {
     this.setState({ modalVisible: true });
     this.setState({ orderID: orderId, })
@@ -228,12 +252,9 @@ class FlatListItem extends React.Component {
     this.setState({ customerAddress: customerAddress })
     this.setState({ customerDeviceId: customerDeviceId })
     this.setState({ modalName: modalName })
-    await this.enableNotification();
+    await this.unableNotification();
   };
-
-
   render() {
-
     const {
       modalVisible,
       orderDevice,
@@ -241,12 +262,14 @@ class FlatListItem extends React.Component {
       customerName,
       customerAddress,
       customerPhone,
-      modalName,
     } = this.state;
 
+    if (this.props.item.address == null) {
+      this.props.item.address = "Home"
+    }
 
     return (
-
+      // Order
       <View>
         <TouchableOpacity
           onPress={() => {
@@ -260,28 +283,15 @@ class FlatListItem extends React.Component {
               this.props.item.customer.deviceId,
               this.props.item.customer.skills.description,
             )
-            console.log("********")
-            console.log("Date create : :" + this.props.item.workDescription.dateCreated)
-            console.log("Worker ID :" + this.state.data.workerId)
-            console.log("********")
           }}
         >
           <View style={styles.itemHandle}>
-            <Image
-              source={require("../assets/images/regItemImage.jpg")}
-              style={styles.image}
-            />
-
-            <View
-              style={{ flexDirection: "column", width: "80%" }}
-            >
-
+            <Image source={require("../assets/images/regItemImage.jpg")} style={styles.image} />
+            <View style={styles.orderContain}>
               <Text style={styles.title}>{this.props.item.nameDevice}</Text>
-
-              <Text style={styles.subtitle}>{this.props.item.address}</Text>
-              <Text style={styles.subtitle}>
-                {this.props.item.workDescription.dateCreated}
-              </Text>
+              <Text style={styles.subtitle}>Customer: {this.props.item.customer.fullname}</Text>
+              <Text style={styles.subtitle}>Address: {this.props.item.customer.address}</Text>
+              <Text style={styles.subtitle}>{this.props.item.workDescription.dateCreated}</Text>
             </View>
           </View>
         </TouchableOpacity>
@@ -292,316 +302,57 @@ class FlatListItem extends React.Component {
           animationType="slide"
           transparent={true}
           visible={modalVisible}
-          onRequestClose={() => {
-            Alert.alert("Modal has been closed");
-          }}
-          onTouchOutside={() => {
-            this.setModalVisible(false)
-          }}
         >
           <View style={styles.modalView}>
-
             <Text style={{ fontSize: 25, fontWeight: '800', textAlign: 'center' }}>Order Detail</Text>
-            <View style={{
-              width: Dimensions.get('screen').width * 7 / 10,
-              height: 50,
-              flexDirection: 'row',
-              alignItems: 'center',
-              borderBottomColor: 'grey',
-              borderBottomWidth: 0.6
-            }}>
+            {/* Device Name */}
+            <View style={styles.popUpDeviceName}>
               <MaterialIcons name="devices" size={24} color="black" />
               <Text style={{ fontSize: 20, marginLeft: 5 }}> Device Name: {orderDevice}</Text>
             </View>
 
-            <View style={{
-              width: Dimensions.get('screen').width * 7 / 10,
-              height: 50,
-              flexDirection: 'row',
-              alignItems: 'center',
-              borderBottomColor: 'grey',
-              borderBottomWidth: 0.6
-            }}>
+            {/* Issue */}
+            <View style={styles.popUpIssue}>
               <Octicons name="issue-opened" size={24} color="black" />
               <Text style={{ fontSize: 20, marginLeft: 5 }}> Issue: {orderDescription}</Text>
             </View>
 
-            <Text style={{ fontSize: 22, marginTop: 20, fontWeight: '800', textAlign: 'center' }}>Customer Information</Text>
+            <Text style={styles.popUpCustomerInformation}>Customer Information</Text>
 
-            <View style={{
-              width: Dimensions.get('screen').width * 7 / 10,
-              height: 50,
-              flexDirection: 'row',
-              alignItems: 'center',
-              borderBottomColor: 'grey',
-              borderBottomWidth: 0.6,
-              marginTop: 10
-            }}>
+            {/* Address */}
+            <View style={styles.popUpAddress}>
               <Entypo name="location" size={24} color="black" />
               <Text style={{ fontSize: 20, marginLeft: 5 }}> Address: {customerAddress}</Text>
             </View>
 
-            <View style={{
-              width: Dimensions.get('screen').width * 7 / 10,
-              height: 50,
-              flexDirection: 'row',
-              alignItems: 'center',
-              borderBottomColor: 'grey',
-              borderBottomWidth: 0.6,
-              marginTop: 10
-            }}>
+            {/* Customer name */}
+            <View style={styles.popUpCustomerName}>
               <FontAwesome name="user" size={24} color="black" />
               <Text style={{ fontSize: 20, marginLeft: 5 }}> Name: {customerName}</Text>
             </View>
 
-            <View style={{
-              width: Dimensions.get('screen').width * 7 / 10,
-              height: 50,
-              flexDirection: 'row',
-              alignItems: 'center',
-              borderBottomColor: 'grey',
-              borderBottomWidth: 0.6,
-              marginTop: 10
-            }}>
+            {/* Customer phone */}
+            <View style={styles.popUpPhone}>
               <FontAwesome name="phone-square" size={24} color="black" />
               <Text style={{ fontSize: 20, marginLeft: 5 }}> Phone: {customerPhone}</Text>
             </View>
 
-
+            {/* Handle Accept */}
             <TouchableOpacity onPress={this.handleAccept}>
               <View style={styles.buttonView}>
-                <Text style={styles.mainButtonText}>
-                  Accept
-                  </Text>
+                <Text style={styles.mainButtonText}>Accept</Text>
               </View>
             </TouchableOpacity>
 
-            <TouchableOpacity
-              onPress={() => this.setModalVisible(false)}
-            >
+            {/* Handle Back */}
+            <TouchableOpacity onPress={() => this.setModalVisible(false)}>
               <View style={styles.buttonCancelView}>
-                <Text style={styles.mainButtonText}>
-                  Back
-                  </Text>
+                <Text style={styles.mainButtonText}>Back</Text>
               </View>
             </TouchableOpacity>
           </View>
         </Modal>
       </View>
-    );
-  }
-}
-
-var currentDate = moment().format("YYYY-MM-DD");
-
-console.log(currentDate)
-export default class listRequestScreen extends React.Component {
-  state = {
-    // imageURL : 'https://reactnativecode.com/wp-content/uploads/2017/10/Guitar.jpg',
-    editable: false,
-    btnEditText: "Stop",
-    modalVisible: false,
-    latitude: null,
-    longitude: null,
-    orderID: "",
-    orderDescription: "",
-    userName: "",
-    userAddress: "",
-    userPhone: "",
-  };
-
-
-
-  bs = React.createRef();
-
-  handlerRefresh = async () => {
-    // let jwt = await AsyncStorage.getItem ('jwt');
-    // ORDER_GET_BY_SKILL_ENDPOINT OR ACCEPT_ORDER_ENDPOINT
-    this.setState({
-      isLoading: true,
-    });
-
-    // let jwt = await AsyncStorage.getItem ('jwt');
-    // ORDER_GET_BY_SKILL_ENDPOINT OR ACCEPT_ORDER_ENDPOINT
-    await GET(ORDER_GET_BY_SKILL_ENDPOINT, {}, {}).then(
-
-      (resJson) => {
-
-        this.setState({ loadData: [] })
-        for (var i = 0; i < resJson.length; i++) {
-          if (resJson[i].status == 'PROCESSING' && resJson[i].workDescription.dateCreated == currentDate) {
-
-            this.state.loadData.push(resJson[i]);
-          }
-        }
-
-        for (var i = 0; i < this.state.loadData.length; i++) {
-          this.state.listOrder.push(this.state.loadData[i]);
-        }
-        this.state.listOrder.reverse();
-
-        this.setState({
-          isLoading: false,
-        });
-      }
-    );
-  };
-
-  // get order by skill
-  async componentDidMount() {
-    // let jwt = await AsyncStorage.getItem ('jwt');
-    // ORDER_GET_BY_SKILL_ENDPOINT OR ACCEPT_ORDER_ENDPOINT
-    //&& resJson[i].workDescription.dateCreated == currentDate
-    await GET(ORDER_GET_BY_SKILL_ENDPOINT, {}, {}).then(
-
-      (resJson) => {
-        for (var i = 0; i < resJson.length; i++) {
-          if (resJson[i].status == 'PROCESSING' && resJson[i].workDescription.dateCreated == currentDate) {
-
-            this.state.loadData.push(resJson[i]);
-          }
-        }
-
-
-        for (var i = 0; i < this.state.loadData.length; i++) {
-          this.state.listOrder.push(this.state.loadData[i]);
-        }
-        this.state.listOrder.reverse();
-
-        this.setState({
-          isLoading: false,
-        });
-      }
-    );
-  }
-  constructor(props) {
-    super(props);
-    this.state = {
-      isLoading: true,
-      listOrder: [],
-      loadData: [],
-      emptyData: [],
-    };
-  }
-
-  render() {
-    if (this.state.isLoading) {
-      return (
-        <View
-          style={{
-            flex: 1,
-            backgroundColor: "#fff",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <View>
-            <ActivityIndicator size="large" />
-          </View>
-        </View>
-      );
-    }
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.container}>
-
-          {/* Header */}
-          <View style={styles.headerInfo}>
-            <Text style={{ fontSize: 20, marginLeft: 50 }}>
-              List Request
-            </Text>
-            <MaterialCommunityIcons
-              name="face-profile"
-              style={{ marginLeft: 30 }}
-              size={35}
-              color="black"
-              onPress={() => {
-                NavigationService.navigate("ProfileScreen");
-              }}
-            />
-          </View>
-
-          {/*  Refresh button */}
-          <View style={styles.imageHeader}>
-            <TouchableOpacity
-              onPress={() => {
-                this.setState({ listOrder: [] })
-                this.handlerRefresh()
-              }}
-            >
-              <View style={styles.buttonRefresh}>
-                <Image
-                  style={{
-                    width: 20,
-                    height: 20,
-                  }}
-                  source={require("../assets/images/refreshButton.png")}
-                />
-                <Text
-                  style={{
-                    color: "#fff",
-                    marginLeft: 10,
-                    fontSize: 20,
-                  }}
-                >
-                  Refresh
-                </Text>
-              </View>
-            </TouchableOpacity>
-          </View>
-
-          {/* Body */}
-          <ScrollView style={{ marginTop: "5%" }}>
-            <View
-              style={{ flex: 1, width: "100%", marginTop: 20 }}
-            >
-              <FlatList
-                data={this.state.listOrder}
-                renderItem={({ item, index }) => {
-                  return (
-                    <FlatListItem
-                      item={item}
-                      index={index}
-                    ></FlatListItem>
-                  );
-                }}
-                keyExtractor={(item, index) => index.toString()}
-              ></FlatList>
-            </View>
-          </ScrollView>
-
-          {/* Job find */}
-          <View style={styles.bodyTextContainer}>
-            <Text style={styles.bodyText}>
-              Let's Start Working!!
-            </Text>
-
-            <TouchableOpacity
-              onPress={() => {
-                NavigationService.navigate("Home");
-              }}
-            >
-              <View
-                style={[
-                  styles.bodyButton,
-                  {
-                    backgroundColor: "#FE0B36",
-                    width: "65%",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    borderColor: "#fff",
-                  },
-                ]}
-              >
-                <Text style={{ color: "#fff", padding: 5 }}>
-                  stop
-                </Text>
-              </View>
-            </TouchableOpacity>
-          </View>
-
-        </View>
-      </SafeAreaView>
     );
   }
 }
@@ -614,7 +365,7 @@ const styles = StyleSheet.create({
   },
   headerInfo: {
     width: "100%",
-    height: 80,
+    height: 60,
     flexDirection: "row",
     justifyContent: "center",
     backgroundColor: "white",
@@ -637,7 +388,6 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
     width: "100%",
     height: 45,
-    marginTop: 5,
   },
   bodyTextContainer: {
     width: 415,
@@ -658,17 +408,19 @@ const styles = StyleSheet.create({
     marginLeft: 20,
   },
   bodyButton: {
-    width: "100%",
-    borderColor: "#F56258",
+    // borderColor: "#F56258",
     borderWidth: 1,
     flexDirection: "row",
     height: 45,
     alignItems: "center",
-    justifyContent: "space-between",
+    justifyContent: "center",
     paddingHorizontal: "6%",
     borderRadius: 20,
     marginTop: 35,
     marginLeft: 20,
+    backgroundColor: "#FE0B36",
+    width: "65%",
+    borderColor: "#fff",
   },
 
   buttonRefresh: {
@@ -708,10 +460,18 @@ const styles = StyleSheet.create({
     width: "90%",
   },
 
+  orderContain: {
+    flexDirection: "column",
+    width: "60%",
+    justifyContent: 'center',
+    alignItems: 'flex-start',
+    marginLeft: '5%'
+  },
+
   title: {
     fontSize: 18,
     fontWeight: "700",
-    padding: 10,
+    padding: 8,
     color: "#000",
   },
   subtitle: {
@@ -731,7 +491,6 @@ const styles = StyleSheet.create({
   },
 
   modalView: {
-
     height: "83%",
     marginTop: "20%",
     margin: 20,
@@ -748,7 +507,6 @@ const styles = StyleSheet.create({
     },
     shadowOpacity: 0.58,
     shadowRadius: 16.00,
-
     elevation: 24,
   },
   modalText: {
@@ -792,7 +550,6 @@ const styles = StyleSheet.create({
   mainButtonText: {
     fontSize: 20,
     color: "white",
-
   },
 
   buttonView: {
@@ -821,5 +578,59 @@ const styles = StyleSheet.create({
     // marginLeft: "5%",
     width: (Dimensions.get("screen").width * 7) / 10,
     height: 50
+  },
+
+  popUpDeviceName: {
+    width: Dimensions.get('screen').width * 7 / 10,
+    height: 50,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderBottomColor: 'grey',
+    borderBottomWidth: 0.6
+  },
+  popUpIssue: {
+    width: Dimensions.get('screen').width * 7 / 10,
+    height: 50,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderBottomColor: 'grey',
+    borderBottomWidth: 0.6
+  },
+
+  popUpAddress: {
+    width: Dimensions.get('screen').width * 7 / 10,
+    height: 50,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderBottomColor: 'grey',
+    borderBottomWidth: 0.6,
+    marginTop: 10
+  },
+
+  popUpCustomerInformation: {
+    fontSize: 22,
+    marginTop: 20,
+    fontWeight: '800',
+    textAlign: 'center'
+  },
+
+  popUpCustomerName: {
+    width: Dimensions.get('screen').width * 7 / 10,
+    height: 50,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderBottomColor: 'grey',
+    borderBottomWidth: 0.6,
+    marginTop: 10
+  },
+
+  popUpPhone: {
+    width: Dimensions.get('screen').width * 7 / 10,
+    height: 50,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderBottomColor: 'grey',
+    borderBottomWidth: 0.6,
+    marginTop: 10
   },
 });

@@ -87,7 +87,6 @@ export default class MapDirection extends Component {
     const orderId = await AsyncStorage.getItem('orderId')
     await GET(ACCEPT_ORDER_ENDPOINT + '/' + orderId
       , {}, {}).then(res => {
-        console.log(res)
         if (res.lat != null) {
           this.setState({
             destinationCoords: {
