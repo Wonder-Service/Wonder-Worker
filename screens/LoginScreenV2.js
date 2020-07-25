@@ -1,11 +1,11 @@
 import * as React from 'react';
-import { StyleSheet, Text, View,AsyncStorage, SafeAreaView, StatusBar, Image, TextInput, TouchableWithoutFeedback, Keyboard, TouchableOpacity, KeyboardAvoidingView, Dimensions } from 'react-native';
-const hp = Dimensions.get ('screen').height;
-const wp = Dimensions.get ('screen').width;
-import { LOGIN_ENDPOINT, USER_ENDPOINT } from '../api/endpoint';
+import { StyleSheet, Text, View, AsyncStorage, SafeAreaView, StatusBar, Image, TextInput, TouchableWithoutFeedback, Keyboard, TouchableOpacity, KeyboardAvoidingView, Dimensions } from 'react-native';
+const hp = Dimensions.get('screen').height;
+const wp = Dimensions.get('screen').width;
+import { LOGIN_ENDPOINT, USER_ENDPOINT, DEVICEID_ENDPOINT } from '../api/endpoint';
 import DropdownAlert from 'react-native-dropdownalert';
 import NavigationService from '../service/navigation';
-import { POSTLOGIN, PUT, GET } from '../api/caller';
+import { POSTLOGIN, PUT, GET, POST_NOBODY } from '../api/caller';
 
 export default class LoginScreenV2 extends React.Component {
     state = { username: '', password: '' };
@@ -31,7 +31,6 @@ export default class LoginScreenV2 extends React.Component {
                 if (res.status === 200) {
                     const jwt = res.headers.get('Authorization');
                     await AsyncStorage.setItem('jwt', jwt);
-                    NavigationService.navigate('Home');
                     await GET(USER_ENDPOINT + '?isMyProfile=1', {}, {})
                         .then(async res => {
 
@@ -41,6 +40,19 @@ export default class LoginScreenV2 extends React.Component {
                             console.log('ReqeustDetailScreen apiget User ERROR');
                             console.log(error);
                         });
+                    const deviceId = await AsyncStorage.getItem('device_id')
+                    await POST_NOBODY(
+                        DEVICEID_ENDPOINT,
+                        {}, {},
+                        {
+                            deviceId: deviceId,
+                        }
+                    ).catch(error => {
+                        console.log('ReqeustDetailScreen apiget User ERROR');
+                        console.log(error);
+                    });
+
+                    NavigationService.navigate('Home');
                 }
                 if (res.status != 200) {
                     this.dropDownAlertRef.alertWithType('error', 'Error', res.status);
@@ -52,7 +64,6 @@ export default class LoginScreenV2 extends React.Component {
         return (
             <SafeAreaView style={styles.Containter}>
                 <StatusBar />
-                {/* <View style={styles.Containter}> */}
                 <KeyboardAvoidingView style={styles.Containter}>
                     <DropdownAlert ref={ref => (this.dropDownAlertRef = ref)} />
                     <TouchableWithoutFeedback style={styles.Containter} onPress={Keyboard.dismiss}>
@@ -118,12 +129,12 @@ const styles = StyleSheet.create({
         color: '#f7c744',
         fontSize: 20,
         textAlign: 'center',
-        marginBottom: hp/100 * 4,
+        marginBottom: hp / 100 * 4,
         opacity: 0.9
     },
     Logo: {
-        width: wp/100 *80,
-        height: hp/100 *20,
+        width: wp / 100 * 80,
+        height: hp / 100 * 20,
     },
     infoContainer: {
         position: 'absolute',
@@ -135,8 +146,8 @@ const styles = StyleSheet.create({
     },
     input: {
         color: '#fff',
-        height: hp/100*5.2,
-        width: wp/100*80,
+        height: hp / 100 * 5.2,
+        width: wp / 100 * 80,
         backgroundColor: '#707070',
         paddingHorizontal: 10,
         marginBottom: 10,
@@ -144,9 +155,9 @@ const styles = StyleSheet.create({
     },
     buttonContainer: {
         backgroundColor: 'rgb(246, 150, 14)',
-        paddingVertical: hp/100*1.7,
-        paddingHorizontal: wp/100*20,
-        marginTop: hp/100*1.2,
+        paddingVertical: hp / 100 * 1.7,
+        paddingHorizontal: wp / 100 * 20,
+        marginTop: hp / 100 * 1.2,
         borderRadius: 10
     },
     buttonText: {

@@ -1,91 +1,247 @@
 import React, { Component } from 'react';
 import {
   View, Image, StyleSheet, Text,
-  TouchableOpacity, Modal, Alert, Button,
-  SafeAreaView, AsyncStorage, Dimensions, FlatList, ActivityIndicator, TouchableHighlight,
+  TouchableOpacity, Modal,
+  SafeAreaView, Dimensions, FlatList, ActivityIndicator, ScrollView,
 } from 'react-native';
 import { FontAwesome } from '@expo/vector-icons';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Notifications } from 'expo';
-import BottomSheet from 'reanimated-bottom-sheet';
 import NavigationService from '../service/navigation';
 import registerForPushNotificationsAsync from '../service/notification';
-import * as Permissions from 'expo-permissions';
-import * as Location from 'expo-location';
-import { PUT, POST, POSTLOGIN, POST_NOBODY, GET } from '../api/caller';
+
+import { GET, POST_NOTI } from '../api/caller';
 import {
-  ACCEPT_ORDER_ENDPOINT,
   ORDER_GET_BY_SKILL_ENDPOINT,
-  USER_ENDPOINT,
+  USER_GET_PROFILE_ENDPOINT,
+  NOTIFICATION_TYPE_REQEST,
+  NOTIFICATION_TYPE_ACCEPT,
+  POST_NOTIFICATION_ENDPOINT,
 } from '../api/endpoint';
-import { TextInput } from 'react-native-gesture-handler';
 import { Octicons } from '@expo/vector-icons';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Entypo } from '@expo/vector-icons';
+import moment from 'moment';
+
+var currentDate = moment().format("YYYY-MM-DD");
+
+
+export default class listRequestScreen extends React.Component {
+
+  constructor(props) {
+    super(props);
+    this.state = {
+      isLoading: true,
+      listOrder: [],
+      loadData: [],
+      latitude: null,
+      longitude: null,
+      orderID: "",
+      orderDescription: "",
+      userName: "",
+      userAddress: "",
+      userPhone: "",
+      notification: 1,
+    };
+  }
+  bs = React.createRef();
+
+  handlerRefresh = async () => {
+    this.setState({ isLoading: true });
+    await GET(ORDER_GET_BY_SKILL_ENDPOINT, {}, {}).then(
+
+      (resJson) => {
+        this.setState({ loadData: [], listOrder: [] })
+        for (var i = 0; i < resJson.length; i++) {
+          if (resJson[i].status == 'PROCESSING' && resJson[i].workDescription.dateCreated == currentDate) {
+            this.state.loadData.push(resJson[i]);
+          }
+        }
+        for (var i = 0; i < this.state.loadData.length; i++) {
+          this.state.listOrder.push(this.state.loadData[i]);
+        }
+        this.state.listOrder.reverse();
+        this.setState({ isLoading: false, });
+      }
+    );
+  };
+
+
+  enableNotification = async () => {
+    registerForPushNotificationsAsync();
+    this._notificationSubscription = Notifications.addListener(async noti => {
+      this.setState({ notification: noti.data });
+      if (this.state.notification.notificationType === NOTIFICATION_TYPE_REQEST) {
+        this.handlerRefresh()
+      }
+    });
+  };
+
+  // get order by skill
+  async componentDidMount() {
+    await GET(ORDER_GET_BY_SKILL_ENDPOINT, {}, {}).then(
+      (resJson) => {
+        this.setState({ loadData: [], listOrder: [] })
+        for (var i = 0; i < resJson.length; i++) {
+          if (resJson[i].status == 'PROCESSING' && resJson[i].workDescription.dateCreated == currentDate) {
+            this.state.loadData.push(resJson[i]);
+          }
+        }
+        for (var i = 0; i < this.state.loadData.length; i++) {
+          this.state.listOrder.push(this.state.loadData[i]);
+        }
+        this.state.listOrder.reverse();
+
+        this.setState({ isLoading: false, });
+      }
+    );
+    await this.enableNotification();
+  }
+
+
+  render() {
+    if (this.state.isLoading) {
+      return (
+        <View style={{ flex: 1, backgroundColor: "#fff", alignItems: "center", justifyContent: "center", marginTop: '10%' }}>
+          <View>
+            <ActivityIndicator size="small" />
+          </View>
+        </View>
+      );
+    }
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.container}>
+          {/* Header */}
+          <View style={styles.headerInfo}>
+            <Text style={{ fontSize: 20 }}>List Request</Text>
+          </View>
+          {/* Refresh button */}
+          <View style={styles.imageHeader}>
+            <TouchableOpacity onPress={() => { this.handlerRefresh() }} >
+              <View style={styles.buttonRefresh}>
+                <Image style={{ width: 20, height: 20, }} source={require("../assets/images/refreshButton.png")} />
+                <Text style={{ color: "#fff", marginLeft: 10, fontSize: 20, }}>Refresh</Text>
+              </View>
+            </TouchableOpacity>
+          </View>
+
+          {/* Body */}
+          <ScrollView style={{ marginTop: "5%" }}>
+            <View style={{ flex: 1, width: "100%", marginTop: 20 }}>
+              <FlatList
+                data={this.state.listOrder}
+                renderItem={({ item, index }) => {
+                  return (
+                    <FlatListItem
+                      item={item}
+                      index={index}
+                    />
+                  );
+                }}
+                keyExtractor={(item, index) => index.toString()}
+              />
+            </View>
+          </ScrollView>
+
+          {/* Job find */}
+          <View style={styles.bodyTextContainer}>
+            <Text style={styles.bodyText}>Let's Start Working!!</Text>
+            <TouchableOpacity onPress={() => { NavigationService.navigate("Home") }}>
+              <View style={styles.bodyButton}>
+                <Text style={{ color: "#fff", padding: 5 }}> stop</Text>
+              </View>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </SafeAreaView>
+    );
+  }
+}
 
 class FlatListItem extends React.Component {
 
   constructor(props) {
     super(props);
     this.state = {
-      isLoading: true,
-      emptyData: [],
-      listCustomer:[],
       modalVisible: false,
-      editable: false,
-      btnEditText: "Stop",
       latitude: null,
       longitude: null,
+      notification: 1,
       orderID: "",
       orderDescription: "",
       customerID: "",
       customerName: "",
       customerAddress: "",
+      customerDeviceId: "",
       customerPhone: "",
-      orderDevice:"",
+      orderDevice: "",
+      modalName: "",
+      data: {
+        notificationType: 'abc',
+        workerId: '',
+        diagnoseMess: 'abc',
+        price: 'abc',
+        orderId: '',
+      },
     }
   };
 
-
-
-  // get user information
-  async componentDidMount() {
-    //get jwt
-    //load profile data 
-    await GET(USER_ENDPOINT, {}, {}).then(
-      (resJson) => {
-        for (var i = 0; i < resJson.length; i++) {
-            this.state.listCustomer.push(resJson[i]);
-        }
-        this.setState({
-          isLoading: false,
-        });
+  unableNotification = async () => {
+    registerForPushNotificationsAsync();
+    this._notificationSubscription = Notifications.addListener(async noti => {
+      this.setState({ notification: noti.data });
+      if (this.state.notification.notificationType === NOTIFICATION_TYPE_ACCEPT) {
+        NavigationService.navigate('MapDirection', this.state.orderID);
+        this.setModalVisible(false)
       }
-
-    );
+    });
   };
+
 
   setModalVisible = (visible) => {
     this.setState({ modalVisible: visible });
   };
 
+  handleAccept = async () => {
 
-  handlerSelectCatogery = (orderId,customerId,deviceName,description) => {
+    await GET(USER_GET_PROFILE_ENDPOINT, {}, {})
+      .then(res => {
+        this.state.data.workerId = res[0].id
+      })
+    this.state.data.orderId = this.state.orderID;
+    this.state.data.notificationType = NOTIFICATION_TYPE_REQEST;
+    let param = {
+      to: 'ExponentPushToken[' + this.state.customerDeviceId + ']',
+      title: 'FixxySystem App Notificaiton',
+      subtitle: 'worker notifcation',
+      body: 'You have a new notifcation',
+      data: this.state.data,
+    };
+    //send notification to customer
+    await POST_NOTI(POST_NOTIFICATION_ENDPOINT, {}, {}, param)
+      .then(res => {
+        if (res.status === 200) {
+          // waiting for customer accept
+        }
+      })
+      .catch(err => console.log(err));
+  };
+
+  handlerSelectCatogery = async (orderId, deviceName, description, customerName, customerPhone, customerAddress, customerDeviceId, modalName) => {
     this.setState({ modalVisible: true });
     this.setState({ orderID: orderId, })
-    this.setState({orderDescription: description,})
-    this.setState({ orderDevice: deviceName})
-    for (var i = 0; i < this.state.listCustomer.length; i++) {
-      if (this.state.listCustomer[i].id == customerId) {
-        this.setState({ customerName: this.state.listCustomer[i].fullname })
-        this.setState({ customerPhone: this.state.listCustomer[i].phone })
-        this.setState({ customerAddress: this.state.listCustomer[i].address })
-      }
-    }
-
+    this.setState({ orderDescription: description, })
+    this.setState({ orderDevice: deviceName })
+    this.setState({ customerName: customerName })
+    this.setState({ customerPhone: customerPhone })
+    this.setState({ customerAddress: customerAddress })
+    this.setState({ customerDeviceId: customerDeviceId })
+    this.setState({ modalName: modalName })
+    await this.unableNotification();
   };
-  render() {
 
+  render() {
     const {
       modalVisible,
       orderDevice,
@@ -95,32 +251,34 @@ class FlatListItem extends React.Component {
       customerPhone,
     } = this.state;
 
+    if (this.props.item.address == null) {
+      this.props.item.address = "Home"
+    }
+
     return (
+      // Order
       <View>
         <TouchableOpacity
           onPress={() => {
-            this.handlerSelectCatogery(this.props.item.id, this.props.item.workDescription.customerId, this.props.item.nameDevice,
-              this.props.item.workDescription.description)
-            
-            console.log(this.props.item.nameDevice)
-            console.log("Customer ID from order: "+this.props.item.workDescription.customerId)
-          //  console.log(this.props.customerName)
+            this.handlerSelectCatogery(
+              this.props.item.id,
+              this.props.item.nameDevice,
+              this.props.item.workDescription.description,
+              this.props.item.customer.fullname,
+              this.props.item.customer.phone,
+              this.props.item.customer.address,
+              this.props.item.customer.deviceId,
+              this.props.item.customer.skills.description,
+            )
           }}
         >
           <View style={styles.itemHandle}>
-            <Image
-              source={require("../assets/images/regItemImage.jpg")}
-              style={styles.image}
-            />
-            <View
-              style={{ flexDirection: "column", width: "80%", height: "100%" }}
-            >
-                
+            <Image source={require("../assets/images/regItemImage.jpg")} style={styles.image} />
+            <View style={{ flexDirection: "column", width: "60%", justifyContent: 'center', alignItems: 'flex-start', marginLeft: '5%' }}>
               <Text style={styles.title}>{this.props.item.nameDevice}</Text>
-              <Text style={styles.subtitle}>{this.props.item.address}</Text>
-              <Text style={styles.subtitle}>
-                {this.props.item.workDescription.dateCreated}
-              </Text>
+              <Text style={styles.subtitle}>Customer: {this.props.item.customer.fullname}</Text>
+              <Text style={styles.subtitle}>Address: {this.props.item.customer.address}</Text>
+              <Text style={styles.subtitle}> {this.props.item.workDescription.dateCreated}</Text>
             </View>
           </View>
         </TouchableOpacity>
@@ -131,246 +289,57 @@ class FlatListItem extends React.Component {
           animationType="slide"
           transparent={true}
           visible={modalVisible}
-          onRequestClose={() => {
-            Alert.alert("Modal has been closed");
-          }}
-          onTouchOutside={() => {
-            this.setModalVisible(false)
-          }}
         >
           <View style={styles.modalView}>
-
-            <View style={{flexDirection:"row",width:"100%",height:130,}}>
-              <Image
-                style={{
-                  width: 100,
-                  height: 100,
-                  marginLeft:10,
-                  borderRadius:100,
-                  opacity:1,
-                }}
-                source={require("../assets/images/popUpPic.png")}
-              />
-              <View>
-                <Text style={{ fontSize: 20, marginLeft: 10 }}>{orderDevice}</Text>
-                <Text style={{ fontSize: 20, marginLeft: 10}}>model name:</Text>
-                <Text style={{ fontSize: 20, marginLeft: 10 }}>{orderDevice}</Text>
-              </View>
+            <Text style={{ fontSize: 25, fontWeight: '800', textAlign: 'center' }}>Order Detail</Text>
+            {/* Device Name */}
+            <View style={styles.popUpDeviceName}>
+              <MaterialIcons name="devices" size={24} color="black" />
+              <Text style={{ fontSize: 20, marginLeft: 5 }}> Device Name: {orderDevice}</Text>
             </View>
-  
-              <Text style={{fontSize:20}}>Address</Text>
-              <View style={{ borderRadius: 20, width: "100%", height: 100, borderWidth: 1, flexDirection: "row",alignContent:"flex-start" }}>
-              <Text style={{ fontSize: 16, marginLeft: 15, marginTop: 10 }}>{customerAddress}</Text>
-              </View>
 
-              <Text style={{fontSize:20}}>Issue</Text>
-              <View style={{ borderRadius: 20, width: "100%", height: 100, borderWidth: 1, flexDirection: "row",alignContent:"flex-start" }}>
-                <Text style={{ fontSize:16,marginLeft:15,marginTop:10 }}>{orderDescription}</Text>
-              </View>
+            {/* Issue */}
+            <View style={styles.popUpIssue}>
+              <Octicons name="issue-opened" size={24} color="black" />
+              <Text style={{ fontSize: 20, marginLeft: 5 }}> Issue: {orderDescription}</Text>
+            </View>
 
-              <Text style={{fontSize:20,marginTop:10}}>Customer Information</Text>
-            <Text style={{ fontSize: 20,marginTop:10}}>Name:{customerName}</Text>
-              <Text style={{ fontSize: 20,marginTop:10 }}>Phone:{customerPhone}</Text>
+            <Text style={styles.popUpCustomerInformation}>Customer Information</Text>
 
-            <TouchableOpacity
-              onPress={() => this.setModalVisible(false)}
-            >
+            {/* Address */}
+            <View style={styles.popUpAddress}>
+              <Entypo name="location" size={24} color="black" />
+              <Text style={{ fontSize: 20, marginLeft: 5 }}> Address: {customerAddress}</Text>
+            </View>
+
+            {/* Customer name */}
+            <View style={styles.popUpCustomerName}>
+              <FontAwesome name="user" size={24} color="black" />
+              <Text style={{ fontSize: 20, marginLeft: 5 }}> Name: {customerName}</Text>
+            </View>
+
+            {/* Customer phone */}
+            <View style={styles.popUpPhone}>
+              <FontAwesome name="phone-square" size={24} color="black" />
+              <Text style={{ fontSize: 20, marginLeft: 5 }}> Phone: {customerPhone}</Text>
+            </View>
+
+            {/* Handle Accept */}
+            <TouchableOpacity onPress={this.handleAccept}>
               <View style={styles.buttonView}>
-                <Text style={StyleSheet.mainButtonText}>
-                  Back
-                  </Text>
+                <Text style={styles.mainButtonText}>Accept</Text>
+              </View>
+            </TouchableOpacity>
+
+            {/* Handle Back */}
+            <TouchableOpacity onPress={() => this.setModalVisible(false)}>
+              <View style={styles.buttonCancelView}>
+                <Text style={styles.mainButtonText}>Back</Text>
               </View>
             </TouchableOpacity>
           </View>
         </Modal>
       </View>
-    );
-  }
-}
-
-export default class listRequestScreen extends React.Component {
-  state = {
-    // imageURL : 'https://reactnativecode.com/wp-content/uploads/2017/10/Guitar.jpg',
-    editable: false,
-    btnEditText: "Stop",
-    modalVisible: false,
-    latitude: null,
-    longitude: null,
-    orderID: "",
-    orderDescription: "",
-    userName: "",
-    userAddress: "",
-    userPhone: "",
-  };
-
-  bs = React.createRef();
-
-  // get order by skill
-  async componentDidMount() {
-    // let jwt = await AsyncStorage.getItem ('jwt');
-    await GET(ORDER_GET_BY_SKILL_ENDPOINT, {}, {}).then(
-      (resJson) => {
-        for (var i = 0; i < resJson.length; i++) {
-          if (resJson[i].status == 'PROCESSING')
-          this.state.listOrder.push(resJson[i]);
-        }
-        this.setState({
-          isLoading: false,
-        });
-      }
-    );
-  }
-  constructor(props) {
-    super(props);
-    this.state = {
-      isLoading: true,
-      listOrder: [],
-      loadData: [],
-      emptyData: [],
-    };
-  }
-
-  render() {
-    if (this.state.isLoading) {
-      return (
-        <View
-          style={{
-            flex: 1,
-            backgroundColor: "#fff",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <View>
-            <ActivityIndicator size="large" />
-          </View>
-        </View>
-      );
-    }
-
-    for (var i = 0; i < this.state.listOrder.length; i++) {
-      this.state.loadData.push(this.state.listOrder[i]);
-    }
-
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.container}>
-          {/* Header */}
-          <View style={styles.headerInfo}>
-            <Text style={{ fontSize: 20, marginLeft: 50 }}>
-              List Request
-            </Text>
-            <MaterialCommunityIcons
-              name="face-profile"
-              style={{ marginLeft: 30 }}
-              size={35}
-              color="black"
-              onPress={() => {
-                NavigationService.navigate("ProfileScreen");
-              }}
-            />
-          </View>
-
-          {/*  Refresh button */}
-          <View style={styles.imageHeader}>
-            <TouchableOpacity
-              onPress={() => {
-                for (
-                  var i = 0;
-                  i < this.state.loadData.length;
-                  i++
-                ) {
-                  var index = this.state.loadData.indexOf(
-                    this.state.loadData[i]
-                  );
-                  if (index > -1) {
-                    this.state.loadData.splice(index, 1);
-                    this.state.loadData.d;
-                  }
-                  i++;
-                }
-                for (
-                  var i = 0;
-                  i < this.state.listOrder.length;
-                  i++
-                ) {
-                  this.state.loadData.push(
-                    this.state.listOrder[i]
-                  );
-                }
-              }}
-            >
-              <View style={styles.buttonRefresh}>
-                <Image
-                  style={{
-                    width: 20,
-                    height: 20,
-                  }}
-                  source={require("../assets/images/refreshButton.png")}
-                />
-                <Text
-                  style={{
-                    color: "#fff",
-                    marginLeft: 10,
-                    fontSize: 20,
-                  }}
-                >
-                  Refresh
-                </Text>
-              </View>
-            </TouchableOpacity>
-          </View>
-
-          {/* Body */}
-          <View
-            style={{ flex: 1, width: "100%", marginTop: 20 }}
-          >
-            <FlatList
-              data={this.state.loadData}
-              renderItem={({ item, index }) => {
-                return (
-                  <FlatListItem
-                    item={item}
-                    index={index}
-                  ></FlatListItem>
-                );
-              }}
-              keyExtractor={(item, index) => index.toString()}
-            ></FlatList>
-          </View>
-
-          {/* Job find */}
-          <View style={styles.bodyTextContainer}>
-            <Text style={styles.bodyText}>
-              Let's Start Working!!
-            </Text>
-
-            <TouchableOpacity
-              onPress={() => {
-                NavigationService.navigate("Home");
-              }}
-            >
-              <View
-                style={[
-                  styles.bodyButton,
-                  {
-                    backgroundColor: "#FE0B36",
-                    width: "65%",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    borderColor: "#fff",
-                  },
-                ]}
-              >
-                <Text style={{ color: "#fff", padding: 5 }}>
-                  stop
-                </Text>
-              </View>
-            </TouchableOpacity>
-          </View>
-
-        </View>
-      </SafeAreaView>
     );
   }
 }
@@ -417,7 +386,7 @@ const styles = StyleSheet.create({
     //marginLeft: 15,
     flexDirection: "row",
     bottom: 0,
-    position: "absolute",
+    // position: "absolute",
   },
   bodyText: {
     fontSize: 18,
@@ -427,17 +396,19 @@ const styles = StyleSheet.create({
     marginLeft: 20,
   },
   bodyButton: {
-    width: "100%",
-    borderColor: "#F56258",
+    // borderColor: "#F56258",
     borderWidth: 1,
     flexDirection: "row",
     height: 45,
     alignItems: "center",
-    justifyContent: "space-between",
+    justifyContent: "center",
     paddingHorizontal: "6%",
     borderRadius: 20,
     marginTop: 35,
     marginLeft: 20,
+    backgroundColor: "#FE0B36",
+    width: "65%",
+    borderColor: "#fff",
   },
 
   buttonRefresh: {
@@ -469,7 +440,6 @@ const styles = StyleSheet.create({
     marginBottom: 2,
     marginTop: 10,
     borderRadius: 5,
-    height: 112,
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 1,
@@ -479,9 +449,9 @@ const styles = StyleSheet.create({
   },
 
   title: {
-    fontSize: 23,
+    fontSize: 18,
     fontWeight: "700",
-    padding: 10,
+    padding: 8,
     color: "#000",
   },
   subtitle: {
@@ -501,21 +471,23 @@ const styles = StyleSheet.create({
   },
 
   modalView: {
-    flex: 1,
+    height: "83%",
+    marginTop: "20%",
     margin: 20,
-    backgroundColor: "white",
+    backgroundColor: "#EFEFEF",
     borderColor: "black",
-    borderWidth: 2,
+    borderWidth: 1,
     borderRadius: 20,
     padding: 35,
     //alignItems: "center",
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
-      height: 2,
+      height: 12,
     },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
+    shadowOpacity: 0.58,
+    shadowRadius: 16.00,
+    elevation: 24,
   },
   modalText: {
     //marginBottom: 15,
@@ -530,10 +502,11 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   centeredView: {
-    flex: 1,
+    // flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    marginTop: 22,
+    // marginTop: 22,
+
   },
 
   inforContainer: {
@@ -555,27 +528,89 @@ const styles = StyleSheet.create({
     //marginLeft: 20,
   },
   mainButtonText: {
-    fontSize: 30,
+    fontSize: 20,
     color: "white",
   },
 
   buttonView: {
-    padding: 15,
-    backgroundColor: "rgba(80, 203, 203, 1)",
+    marginTop: 20,
+    backgroundColor: "#2ac17b",
     borderRadius: 20,
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 20,
-    marginRight:10,
+    // alignContent: 'center',
+    // padding: 15,
+    // marginTop: "5%",
+    // marginLeft: "5%",
     width: (Dimensions.get("screen").width * 7) / 10,
+    height: 50
   },
 
   buttonCancelView: {
-    padding: 15,
-    backgroundColor: "#d63d2f",
+    marginTop: 10,
+    backgroundColor: "#f34642",
     borderRadius: 20,
     alignItems: "center",
     justifyContent: "center",
-    width: (Dimensions.get("screen").width * 8) / 10,
+    // alignContent: 'center',
+    // padding: 15,
+    // marginTop: "5%",
+    // marginLeft: "5%",
+    width: (Dimensions.get("screen").width * 7) / 10,
+    height: 50
+  },
+
+  popUpDeviceName: {
+    width: Dimensions.get('screen').width * 7 / 10,
+    height: 50,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderBottomColor: 'grey',
+    borderBottomWidth: 0.6
+  },
+  popUpIssue: {
+    width: Dimensions.get('screen').width * 7 / 10,
+    height: 50,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderBottomColor: 'grey',
+    borderBottomWidth: 0.6
+  },
+
+  popUpAddress: {
+    width: Dimensions.get('screen').width * 7 / 10,
+    height: 50,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderBottomColor: 'grey',
+    borderBottomWidth: 0.6,
+    marginTop: 10
+  },
+
+  popUpCustomerInformation: {
+    fontSize: 22,
+    marginTop: 20,
+    fontWeight: '800',
+    textAlign: 'center'
+  },
+
+  popUpCustomerName: {
+    width: Dimensions.get('screen').width * 7 / 10,
+    height: 50,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderBottomColor: 'grey',
+    borderBottomWidth: 0.6,
+    marginTop: 10
+  },
+
+  popUpPhone: {
+    width: Dimensions.get('screen').width * 7 / 10,
+    height: 50,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderBottomColor: 'grey',
+    borderBottomWidth: 0.6,
+    marginTop: 10
   },
 });
