@@ -80,152 +80,155 @@ export default class NewHomeScreen extends React.Component {
 
   bs = React.createRef();
 
-  stopJob = async () => {
-    //stop receive notification
+  // stopJob = async () => {
+  //   //stop receive notification
 
-    //stop tracking location
-    await Location.stop;
-  };
+  //   //stop tracking location
+  //   await Location.stop;
+  // };
 
-  startJob = async () => {
-    this.setState({ findingState: true });
-    //push id device to sever
-    await this.enableNotification();
+  // startJob = async () => {
+  //   this.setState({ findingState: true });
+  //   //push id device to sever
+  //   await this.enableNotification();
 
-    const deviceId = await AsyncStorage.getItem('device_id');
-    await POST_NOBODY(
-      DEVICEID_ENDPOINT,
-      {},
-      {},
-      {
-        deviceId: deviceId,
-      }
-    ).then(res => console.log("Start Finding Job"));
+  //   const deviceId = await AsyncStorage.getItem('device_id');
+  //   await POST_NOBODY(
+  //     DEVICEID_ENDPOINT,
+  //     {},
+  //     {},
+  //     {
+  //       deviceId: deviceId,
+  //     }
+  //   ).then(res => console.log("Start Finding Job"));
 
-    //udpate location to firebase
-    await this.updateLocation();
-  };
+  //   //udpate location to firebase
+  //   await this.updateLocation();
+  // };
 
-  getLocationByCoords = async (coords) => {
-    let url = 'https://maps.googleapis.com/maps/api/geocode/json?latlng='
-      + coords.latitude + ',' + coords.longitude + '&key=' + GEO_KEY_API;
-    await fetch(url, {
-      method: 'GET',
-    }).then(res => res.json()).then(data => {
-      console.log(data.results[0].formatted_address)
-      this.setState({ address: data.results[0].formatted_address })
-    }); Home
-  }
+  // getLocationByCoords = async (coords) => {
+  //   let url = 'https://maps.googleapis.com/maps/api/geocode/json?latlng='
+  //     + coords.latitude + ',' + coords.longitude + '&key=' + GEO_KEY_API;
+  //   await fetch(url, {
+  //     method: 'GET',
+  //   }).then(res => res.json()).then(data => {
+  //     console.log(data.results[0].formatted_address)
+  //     this.setState({ address: data.results[0].formatted_address })
+  //   });
+  // }
 
-  enableNotification = async () => {
-    registerForPushNotificationsAsync();
-    let token = await AsyncStorage.getItem('device_id');
+  // enableNotification = async () => {
+  //   registerForPushNotificationsAsync();
+  //   let token = await AsyncStorage.getItem('device_id');
 
-    this._notificationSubscription = Notifications.addListener(async noti => {
-      console.log("we had a noti")
-      this.setState({ notification: noti.data });
-      console.log(this.state.notification)
-      if (
-        this.state.notification.notificationType === NOTIFICATION_TYPE_REQEST
-      ) {
-        console.log(this.state.notification);
-        // await GET(
-        //   USER_ENDPOINT + '/' + noti.data.customerId,
-        //   {},
-        //   {}
-        // ).then(res => {
-        //   this.setState({
-        //     customer: {
-        //       name: res.fullname,
-        //       phone: res.phone
-        //     }
-        //   })
-        // })
+  //   this._notificationSubscription = Notifications.addListener(async noti => {
+  //     console.log("we had a noti")
+  //     this.setState({ notification: noti.data });
+  //     console.log(this.state.notification)
+  //     if (
+  //       this.state.notification.notificationType === NOTIFICATION_TYPE_REQEST
+  //     ) {
+  //       console.log(this.state.notification);
+  //       // await GET(
+  //       //   USER_ENDPOINT + '/' + noti.data.customerId,
+  //       //   {},
+  //       //   {}
+  //       // ).then(res => {
+  //       //   this.setState({
+  //       //     customer: {
+  //       //       name: res.fullname,
+  //       //       phone: res.phone
+  //       //     }
+  //       //   })
+  //       // })
 
-        await this.getLocationByCoords
-        this.setModalVisible(true);
+  //       await this.getLocationByCoords
+  //       this.setModalVisible(true);
 
-      } else if (
-        this.state.notification.notificationType === NOTIFICATION_TYPE_ACCEPT
-      ) {
-        console.log('Receive NOTIFICATION REQUEST FROM CUSTOMER');
-        NavigationService.navigate('MapDirection', this.state.notification);
-        this.setModalVisible(false);
-      }
-    });
-  };
+  //     } else if (
+  //       this.state.notification.notificationType === NOTIFICATION_TYPE_ACCEPT
+  //     ) {
+  //       console.log('Receive NOTIFICATION REQUEST FROM CUSTOMER');
+  //       NavigationService.navigate('MapDirection', this.state.notification);
+  //       this.setModalVisible(false);
+  //     }
+  //   });
+  // };
 
-  updateLocation = async () => {
-    const { status } = await Permissions.askAsync(Permissions.LOCATION);
-    let token = await AsyncStorage.getItem('device_id');
+  // updateLocation = async () => {
+  //   const { status } = await Permissions.askAsync(Permissions.LOCATION);
+  //   let token = await AsyncStorage.getItem('device_id');
 
-    if (status != 'granted') {
-      const response = await Permissions.askAsync(Permissions.LOCATION);
-    }
+  //   if (status != 'granted') {
+  //     const response = await Permissions.askAsync(Permissions.LOCATION);
+  //   }
 
-    firebase.database().ref('/' + token).set({
-      latitude: this.state.latitude,
-      longitude: this.state.longitude,
-    });
+  //   firebase.database().ref('/' + token).set({
+  //     latitude: this.state.latitude,
+  //     longitude: this.state.longitude,
+  //   });
 
-    await Location.watchPositionAsync(
-      {
-        timeInterval: 3000,
-        distanceInterval: 2,
-      },
-      location => {
-        this.setState({
-          latitude: location.coords.latitude,
-          longitude: location.coords.longitude,
-        });
+  //   await Location.watchPositionAsync(
+  //     {
+  //       timeInterval: 3000,
+  //       distanceInterval: 2,
+  //     },
+  //     location => {
+  //       this.setState({
+  //         latitude: location.coords.latitude,
+  //         longitude: location.coords.longitude,
+  //       });
 
-        firebase.database().ref('/' + token).set({
-          latitude: this.state.latitude,
-          longitude: this.state.longitude,
-        });
-      }
-    );
-  };
+  //       firebase.database().ref('/' + token).set({
+  //         latitude: this.state.latitude,
+  //         longitude: this.state.longitude,
+  //       });
+  //     }
+  //   );
+  // };
 
-  handleAccept = async () => {
-    const { notification } = this.state;
-    const jwt = await AsyncStorage.getItem('jwt');
-    const workerId = await AsyncStorage.getItem('userId');
-    const orderId = await AsyncStorage.setItem(
-      'orderId',
-      notification.orderId + ''
-    );
-    let messNotificationFlag = this.state.messNotification;
-    messNotificationFlag.data.workerId = +workerId;
-    messNotificationFlag.data.orderId = notification.orderId;
-    messNotificationFlag.data.notificationType = NOTIFICATION_TYPE_REQEST;
-    // this.setState({messNotification.data.workerId: +workerId});
-    // console.log(messNotificationFlag)
-    this.setState({ messNotification: messNotificationFlag });
-    let param = {
-      to: 'ExponentPushToken[' + this.state.notification.deviceId + ']',
-      title: this.state.messNotification.title,
-      subtitle: this.state.messNotification.subtitle,
-      body: this.state.messNotification.body,
-      data: this.state.messNotification.data,
-      catogery: this.state.catogery,
-    };
-    //send notification to customer
-    console.log(param);
-    const token = await await Notifications.getExpoPushTokenAsync();
-    await POST(POST_NOTIFICATION_ENDPOINT, {}, {}, param)
-      .then(res => {
-        if (res.status === 200) {
-          // waiting for customer accept
-          console.log('Send Request susscess');
-        }
-      })
-      .catch(err => console.log(err));
-  };
+  // handleAccept = async () => {
+  //   const { notification } = this.state;
+  //   const jwt = await AsyncStorage.getItem('jwt');
+  //   const workerId = await AsyncStorage.getItem('userId');
+  //   const orderId = await AsyncStorage.setItem(
+  //     'orderId',
+  //     notification.orderId + ''
+  //   );
+  //   let messNotificationFlag = this.state.messNotification;
+  //   messNotificationFlag.data.workerId = +workerId;
+  //   messNotificationFlag.data.orderId = notification.orderId;
+  //   messNotificationFlag.data.notificationType = NOTIFICATION_TYPE_REQEST;
+  //   // this.setState({messNotification.data.workerId: +workerId});
+  //   // console.log(messNotificationFlag)
+  //   this.setState({ messNotification: messNotificationFlag });
+  //   let param = {
+  //     to: 'ExponentPushToken[' + this.state.notification.deviceId + ']',
+  //     title: this.state.messNotification.title,
+  //     subtitle: this.state.messNotification.subtitle,
+  //     body: this.state.messNotification.body,
+  //     data: this.state.messNotification.data,
+  //     // catogery: this.state.catogery,
+  //   };
+  //   //send notification to customer
+  //   console.log(param);
+  //   const token = await await Notifications.getExpoPushTokenAsync();
+  //   await POST(POST_NOTIFICATION_ENDPOINT, {}, {}, param)
+  //     .then(res => {
+  //       console.log('receive Response success!');
+  //       console.log("Response Status: " + res.status);
+  //       if (res.status === 200) {
+  //         console.log("Response Status: " + res.status);
+  //         // waiting for customer accept
+  //         console.log('Send Request succcess');
+  //       }
+  //     })
+  //     .catch(err => console.log(err));
+  // };
 
-  setModalVisible = (visible) => {
-    this.setState({ modalVisible: visible });
-  }
+  // setModalVisible = (visible) => {
+  //   this.setState({ modalVisible: visible });
+  // }
 
   // Load_New_Image=()=>{
 
@@ -243,7 +246,7 @@ export default class NewHomeScreen extends React.Component {
       modalVisible,
       notification,
       address,
-     
+
     } = this.state;
     return (
 
@@ -260,80 +263,77 @@ export default class NewHomeScreen extends React.Component {
 
               source={require('../assets/images/worker.png')}
 
-              // source = {{ uri: this.state.imageURL }}
+            // source = {{ uri: this.state.imageURL }}
             />
           </View>
 
 
           <View style={styles.textContainer}>
             <Text style={styles.text}>Let's Start Working!!</Text>
-            <View style={{flexDirection:"column",justifyContent:'center',alignContent:'center'}}>
-            <TouchableOpacity
-              onPress={() => {
+            <View style={{ flexDirection: "column", justifyContent: 'center', alignContent: 'center' }}>
+              {/* <TouchableOpacity
+                onPress={() => {
 
-                //this.setModalVisible(true);
-                if (editable) {
-                  this.setState({ editable: false });
-                } else {
-                  this.setState({ editable: true });
-                }
-                if (btnEditText !== 'Start Finding') {
-                  this.setState({ btnEditText: 'Start Finding' });
-                  this.stopJob();
-                } else {
-                  this.setState({ btnEditText: 'Stop' });
-                  this.startJob();
-                }
-              }}
-            >
-              <View
-                style={[
-                  styles.button,
-                  {
-                    backgroundColor: '#3ddc84',
-                    width: '65%',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    borderColor: '#fff',
-                  },
-                ]}
+                  //this.setModalVisible(true);
+                  if (editable) {
+                    this.setState({ editable: false });
+                  } else {
+                    this.setState({ editable: true });
+                  }
+                  if (btnEditText !== 'Start Finding') {
+                    this.setState({ btnEditText: 'Start Finding' });
+                    this.stopJob();
+                  } else {
+                    this.setState({ btnEditText: 'Stop' });
+                    this.startJob();
+                  }
+                }}
               >
-                <Text style={{ color: '#fff', padding: 5, }}>
-                  {btnEditText}
-                </Text>
-              </View>
-            </TouchableOpacity>
-            
-            <TouchableOpacity
-              onPress={() => {
-                NavigationService.navigate("RequestScreen");
-              }}
-            >
-              <View
-                style={[
-                  styles.button,
-                  {
-                    backgroundColor: '#3ddc84',
-                    width: '65%',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    borderColor: '#fff',
-                    marginBottom:35,
-                  },
-                ]}
+                <View
+                  style={[
+                    styles.button,
+                    {
+                      backgroundColor: '#3ddc84',
+                      width: '65%',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      borderColor: '#fff',
+                    },
+                  ]}
+                >
+                  <Text style={{ color: '#fff', padding: 5, }}>
+                    {btnEditText}
+                  </Text>
+                </View>
+              </TouchableOpacity> */}
+
+              <TouchableOpacity
+                onPress={() => {
+                  NavigationService.navigate("RequestScreen");
+                }}
               >
-                <Text style={{ color: '#fff', padding: 5, }}>
-                  start working
+                <View
+                  style={[
+                    styles.button,
+                    {
+                      backgroundColor: '#3ddc84',
+                      width: '65%',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      borderColor: '#fff',
+                      marginBottom: 35,
+                    },
+                  ]}
+                >
+                  <Text style={{ color: '#fff', padding: 5, }}>
+                    start working
                 </Text>
-              </View>
-            </TouchableOpacity>
+                </View>
+              </TouchableOpacity>
 
             </View>
 
           </View>
-
-
-
 
           <View style={styles.centeredView}>
             <Modal animationType="slide"
@@ -393,7 +393,7 @@ export default class NewHomeScreen extends React.Component {
           </View>
 
 
-          
+
         </View>
 
       </SafeAreaView>
@@ -435,7 +435,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     marginTop: 50,
     bottom: 0,
-    position: "absolute",
 
   },
   text: {
@@ -511,7 +510,7 @@ const styles = StyleSheet.create({
     //marginRight: 20
 
   },
-  
+
   headerPopUp: {
     fontSize: 20,
     fontWeight: "800",
@@ -530,7 +529,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 20,
-    width: Dimensions.get ('screen').width * 8 / 10,
+    width: Dimensions.get('screen').width * 8 / 10,
   },
 
   buttonCancelView: {
@@ -539,7 +538,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
-    width: Dimensions.get ('screen').width * 8 / 10,
+    width: Dimensions.get('screen').width * 8 / 10,
   },
 
 })

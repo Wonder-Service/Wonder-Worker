@@ -21,6 +21,16 @@ export const POST = async (endpoint, params = {}, headers = {}, body = {}) => {
    }).then(res => res.json());
 };
 
+export const POST_NOTI = async (endpoint, params = {}, headers = {}, body = {}) => {
+   headers["Content-Type"] = "application/json";
+   return fetch(endpoint, {
+      method: "POST",
+      headers: headers,
+      body: JSON.stringify(body)
+   }).then(res => res.json());
+};
+
+
 export const POSTLOGIN = async (endpoint, params = {}, headers = {}, body = {}) => {
    headers["Content-Type"] = "application/json";
    return fetch(endpoint, {
