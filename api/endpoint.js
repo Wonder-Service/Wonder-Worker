@@ -1,6 +1,6 @@
 // export const BASE_URL = "https://fixxyworker.herokuapp.com";
 
-export const BASE_URL = "https://prmproject-200708163028.azurewebsites.net/";
+export const BASE_URL = "https://prmproject-200708163028.azurewebsites.net";
 
 // export const BASE_URL = "http://10.1.140.193:8080"
 

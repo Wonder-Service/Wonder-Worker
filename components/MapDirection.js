@@ -64,8 +64,6 @@ export default class MapDirection extends Component {
 
   initScreen = async () => {
     const { status } = await Permissions.askAsync(Permissions.LOCATION);
-    console.log("map direction")
-    console.log(this.props.navigation.state.params)
     if (status != 'granted') {
       const response = await Permissions.askAsync(Permissions.LOCATION);
     }
@@ -84,7 +82,8 @@ export default class MapDirection extends Component {
 
   getDestinationCoords = async () => {
 
-    const orderId = await AsyncStorage.getItem('orderId')
+    const orderId = this.props.navigation.state.params
+
     await GET(ACCEPT_ORDER_ENDPOINT + '/' + orderId
       , {}, {}).then(res => {
         if (res.lat != null) {
@@ -96,11 +95,10 @@ export default class MapDirection extends Component {
           })
         }
       }).catch(error => { console.log(error) })
-    console.log(this.state.destinationCoords)
   }
 
   handleCancel = async () => {
-    let orderId = await AsyncStorage.getItem('orderId');
+    let orderId = this.props.navigation.state.params
     await POST_NOBODY(
       CANCEL_ORDER_ENDPOINT,
       {},
@@ -115,9 +113,9 @@ export default class MapDirection extends Component {
 
   handleComplete = async () => {
     //API complete 
-    let orderId = await AsyncStorage.getItem('orderId');
+    let orderId = this.props.navigation.state.params
     await PUT(ORDER_COMPLETE_ENDPOINT + '/' + orderId + '/status-complete', {}, {}).then(res => {
-      NavigationService.navigate('HomeScreen');
+      NavigationService.navigate('Home');
     });
   };
 
@@ -153,6 +151,7 @@ export default class MapDirection extends Component {
               origin={currentLocation.coords}
               // destination={address != null ? address: coords}
               destination={destinationCoords}
+
               apikey={'AIzaSyDn2ruHQmquB33aoQK3d0QLsGsN6bLLm1c'}
               strokeWidth={3}
               strokeColor="blue"

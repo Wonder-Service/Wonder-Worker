@@ -27,7 +27,6 @@ var currentDate = moment().format("YYYY-MM-DD");
 
 
 export default class listRequestScreen extends React.Component {
-  _isMounted = false;
 
   constructor(props) {
     super(props);
@@ -67,55 +66,45 @@ export default class listRequestScreen extends React.Component {
     );
   };
 
+
   enableNotification = async () => {
     registerForPushNotificationsAsync();
     this._notificationSubscription = Notifications.addListener(async noti => {
-      console.log("we had a noti")
       this.setState({ notification: noti.data });
-      console.log(this.state.notification)
       if (this.state.notification.notificationType === NOTIFICATION_TYPE_REQEST) {
         this.handlerRefresh()
-      } else if (this.state.notification.notificationType === NOTIFICATION_TYPE_ACCEPT) {
-        console.log('Receive NOTIFICATION REQUEST FROM CUSTOMER');
-        NavigationService.navigate('MapDirection', this.state.notification);
       }
     });
   };
 
   // get order by skill
   async componentDidMount() {
-    this._isMounted = true;
     await GET(ORDER_GET_BY_SKILL_ENDPOINT, {}, {}).then(
       (resJson) => {
-        if (this._isMounted) {
-          this.setState({ loadData: [], listOrder: [] })
-          for (var i = 0; i < resJson.length; i++) {
-            if (resJson[i].status == 'PROCESSING' && resJson[i].workDescription.dateCreated == currentDate) {
-              this.state.loadData.push(resJson[i]);
-            }
+        this.setState({ loadData: [], listOrder: [] })
+        for (var i = 0; i < resJson.length; i++) {
+          if (resJson[i].status == 'PROCESSING' && resJson[i].workDescription.dateCreated == currentDate) {
+            this.state.loadData.push(resJson[i]);
           }
-          for (var i = 0; i < this.state.loadData.length; i++) {
-            this.state.listOrder.push(this.state.loadData[i]);
-          }
-          this.state.listOrder.reverse();
-
-          this.setState({ isLoading: false, });
         }
+        for (var i = 0; i < this.state.loadData.length; i++) {
+          this.state.listOrder.push(this.state.loadData[i]);
+        }
+        this.state.listOrder.reverse();
+
+        this.setState({ isLoading: false, });
       }
     );
     await this.enableNotification();
   }
 
-  componentWillUnmount() {
-    this._isMounted = false;
-  }
 
   render() {
     if (this.state.isLoading) {
       return (
-        <View style={{ flex: 1, backgroundColor: "#fff", alignItems: "center", justifyContent: "center", }}>
+        <View style={{ flex: 1, backgroundColor: "#fff", alignItems: "center", justifyContent: "center", marginTop: '10%' }}>
           <View>
-            <ActivityIndicator size="large" />
+            <ActivityIndicator size="small" />
           </View>
         </View>
       );
@@ -203,9 +192,8 @@ class FlatListItem extends React.Component {
     this._notificationSubscription = Notifications.addListener(async noti => {
       this.setState({ notification: noti.data });
       if (this.state.notification.notificationType === NOTIFICATION_TYPE_ACCEPT) {
-        console.log('Receive NOTIFICATION REQUEST FROM CUSTOMER');
+        NavigationService.navigate('MapDirection', this.state.orderID);
         this.setModalVisible(false)
-        this.state.notification = ''
       }
     });
   };
@@ -214,7 +202,9 @@ class FlatListItem extends React.Component {
   setModalVisible = (visible) => {
     this.setState({ modalVisible: visible });
   };
+
   handleAccept = async () => {
+
     await GET(USER_GET_PROFILE_ENDPOINT, {}, {})
       .then(res => {
         this.state.data.workerId = res[0].id
@@ -229,14 +219,10 @@ class FlatListItem extends React.Component {
       data: this.state.data,
     };
     //send notification to customer
-    console.log(param);
     await POST_NOTI(POST_NOTIFICATION_ENDPOINT, {}, {}, param)
       .then(res => {
-        console.log('receive Response success!');
-        console.log("Response Status: " + res.status);
         if (res.status === 200) {
           // waiting for customer accept
-          console.log('Send Request susscess');
         }
       })
       .catch(err => console.log(err));
@@ -254,6 +240,7 @@ class FlatListItem extends React.Component {
     this.setState({ modalName: modalName })
     await this.unableNotification();
   };
+
   render() {
     const {
       modalVisible,
@@ -287,11 +274,11 @@ class FlatListItem extends React.Component {
         >
           <View style={styles.itemHandle}>
             <Image source={require("../assets/images/regItemImage.jpg")} style={styles.image} />
-            <View style={styles.orderContain}>
+            <View style={{ flexDirection: "column", width: "60%", justifyContent: 'center', alignItems: 'flex-start', marginLeft: '5%' }}>
               <Text style={styles.title}>{this.props.item.nameDevice}</Text>
               <Text style={styles.subtitle}>Customer: {this.props.item.customer.fullname}</Text>
               <Text style={styles.subtitle}>Address: {this.props.item.customer.address}</Text>
-              <Text style={styles.subtitle}>{this.props.item.workDescription.dateCreated}</Text>
+              <Text style={styles.subtitle}> {this.props.item.workDescription.dateCreated}</Text>
             </View>
           </View>
         </TouchableOpacity>
@@ -365,7 +352,7 @@ const styles = StyleSheet.create({
   },
   headerInfo: {
     width: "100%",
-    height: 60,
+    height: 80,
     flexDirection: "row",
     justifyContent: "center",
     backgroundColor: "white",
@@ -388,6 +375,7 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
     width: "100%",
     height: 45,
+    marginTop: 5,
   },
   bodyTextContainer: {
     width: 415,
@@ -458,14 +446,6 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     borderColor: "black",
     width: "90%",
-  },
-
-  orderContain: {
-    flexDirection: "column",
-    width: "60%",
-    justifyContent: 'center',
-    alignItems: 'flex-start',
-    marginLeft: '5%'
   },
 
   title: {
