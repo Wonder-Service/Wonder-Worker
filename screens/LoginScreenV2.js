@@ -64,7 +64,6 @@ export default class LoginScreenV2 extends React.Component {
         return (
             <SafeAreaView style={styles.Containter}>
                 <StatusBar />
-                {/* <View style={styles.Containter}> */}
                 <KeyboardAvoidingView style={styles.Containter}>
                     <DropdownAlert ref={ref => (this.dropDownAlertRef = ref)} />
                     <TouchableWithoutFeedback style={styles.Containter} onPress={Keyboard.dismiss}>
