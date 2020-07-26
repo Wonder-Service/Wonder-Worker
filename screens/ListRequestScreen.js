@@ -28,6 +28,8 @@ var currentDate = moment().format("YYYY-MM-DD");
 
 export default class listRequestScreen extends React.Component {
 
+  _isMounted = false;
+
   constructor(props) {
     super(props);
     this.state = {
@@ -47,11 +49,14 @@ export default class listRequestScreen extends React.Component {
   bs = React.createRef();
 
   handlerRefresh = async () => {
+    this._isMounted = true;
     this.setState({ isLoading: true });
     await GET(ORDER_GET_BY_SKILL_ENDPOINT, {}, {}).then(
 
       (resJson) => {
-        this.setState({ loadData: [], listOrder: [] })
+        if (this._isMounted) {
+          this.setState({ loadData: [], listOrder: [] })
+        }
         for (var i = 0; i < resJson.length; i++) {
           if (resJson[i].status == 'PROCESSING' && resJson[i].workDescription.dateCreated == currentDate) {
             this.state.loadData.push(resJson[i]);
@@ -62,26 +67,35 @@ export default class listRequestScreen extends React.Component {
         }
         this.state.listOrder.reverse();
         this.setState({ isLoading: false, });
+
       }
     );
   };
 
 
   enableNotification = async () => {
+    this._isMounted = true;
     registerForPushNotificationsAsync();
     this._notificationSubscription = Notifications.addListener(async noti => {
-      this.setState({ notification: noti.data });
+      if (this._isMounted) {
+        this.setState({ notification: noti.data });
+      }
       if (this.state.notification.notificationType === NOTIFICATION_TYPE_REQEST) {
         this.handlerRefresh()
+      } else {
+        this._isMounted = false;
       }
     });
   };
 
   // get order by skill
   async componentDidMount() {
+    this._isMounted = true;
     await GET(ORDER_GET_BY_SKILL_ENDPOINT, {}, {}).then(
       (resJson) => {
-        this.setState({ loadData: [], listOrder: [] })
+        if (this._isMounted) {
+          this.setState({ loadData: [], listOrder: [] })
+        }
         for (var i = 0; i < resJson.length; i++) {
           if (resJson[i].status == 'PROCESSING' && resJson[i].workDescription.dateCreated == currentDate) {
             this.state.loadData.push(resJson[i]);
@@ -100,6 +114,7 @@ export default class listRequestScreen extends React.Component {
 
 
   render() {
+
     if (this.state.isLoading) {
       return (
         <View style={{ flex: 1, backgroundColor: "#fff", alignItems: "center", justifyContent: "center", marginTop: '10%' }}>
@@ -110,57 +125,55 @@ export default class listRequestScreen extends React.Component {
       );
     }
     return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.container}>
-          {/* Header */}
-          <View style={styles.headerInfo}>
-            <Text style={{ fontSize: 20 }}>List Request</Text>
-          </View>
-          {/* Refresh button */}
-          <View style={styles.imageHeader}>
-            <TouchableOpacity onPress={() => { this.handlerRefresh() }} >
-              <View style={styles.buttonRefresh}>
-                <Image style={{ width: 20, height: 20, }} source={require("../assets/images/refreshButton.png")} />
-                <Text style={{ color: "#fff", marginLeft: 10, fontSize: 20, }}>Refresh</Text>
-              </View>
-            </TouchableOpacity>
-          </View>
-
-          {/* Body */}
-          <ScrollView style={{ marginTop: "5%" }}>
-            <View style={{ flex: 1, width: "100%", marginTop: 20 }}>
-              <FlatList
-                data={this.state.listOrder}
-                renderItem={({ item, index }) => {
-                  return (
-                    <FlatListItem
-                      item={item}
-                      index={index}
-                    />
-                  );
-                }}
-                keyExtractor={(item, index) => index.toString()}
-              />
-            </View>
-          </ScrollView>
-
-          {/* Job find */}
-          <View style={styles.bodyTextContainer}>
-            <Text style={styles.bodyText}>Let's Start Working!!</Text>
-            <TouchableOpacity onPress={() => { NavigationService.navigate("Home") }}>
-              <View style={styles.bodyButton}>
-                <Text style={{ color: "#fff", padding: 5 }}> stop</Text>
-              </View>
-            </TouchableOpacity>
-          </View>
+      <View style={styles.container}>
+        {/* Header */}
+        <View style={styles.headerInfo}>
+          <Text style={{ fontSize: 20 }}>List Request</Text>
         </View>
-      </SafeAreaView>
+        {/* Refresh button */}
+        <View style={styles.imageHeader}>
+          <TouchableOpacity onPress={() => { this.handlerRefresh() }} >
+            <View style={styles.buttonRefresh}>
+              <Image style={{ width: 20, height: 20, }} source={require("../assets/images/refreshButton.png")} />
+              <Text style={{ color: "#fff", marginLeft: 10, fontSize: 20, }}>Refresh</Text>
+            </View>
+          </TouchableOpacity>
+        </View>
+
+        {/* Body */}
+        <ScrollView style={{ marginTop: "5%" }}>
+          <View style={{ flex: 1, width: "100%", marginTop: 20 }}>
+            <FlatList
+              data={this.state.listOrder}
+              renderItem={({ item, index }) => {
+                return (
+                  <FlatListItem
+                    item={item}
+                    index={index}
+                  />
+                );
+              }}
+              keyExtractor={(item, index) => index.toString()}
+            />
+          </View>
+        </ScrollView>
+
+        {/* Job find */}
+        <View style={styles.bodyTextContainer}>
+          <Text style={styles.bodyText}>Let's Start Working!!</Text>
+          <TouchableOpacity onPress={() => { NavigationService.navigate("Home") }}>
+            <View style={styles.bodyButton}>
+              <Text style={{ color: "#fff", padding: 5 }}> stop</Text>
+            </View>
+          </TouchableOpacity>
+        </View>
+      </View>
     );
   }
 }
 
 class FlatListItem extends React.Component {
-
+  _isMounted = false;
   constructor(props) {
     super(props);
     this.state = {
@@ -188,11 +201,15 @@ class FlatListItem extends React.Component {
   };
 
   unableNotification = async () => {
+    this._isMounted = true;
     registerForPushNotificationsAsync();
     this._notificationSubscription = Notifications.addListener(async noti => {
-      this.setState({ notification: noti.data });
+      if (this._isMounted) {
+        this.setState({ notification: noti.data });
+      }
       if (this.state.notification.notificationType === NOTIFICATION_TYPE_ACCEPT) {
         NavigationService.navigate('MapDirection', this.state.orderID);
+        this._isMounted = false;
         this.setModalVisible(false)
       }
     });
@@ -204,10 +221,12 @@ class FlatListItem extends React.Component {
   };
 
   handleAccept = async () => {
-
+    this._isMounted = true;
     await GET(USER_GET_PROFILE_ENDPOINT, {}, {})
       .then(res => {
-        this.state.data.workerId = res[0].id
+        if (this._isMounted) {
+          this.state.data.workerId = res[0].id
+        }
       })
     this.state.data.orderId = this.state.orderID;
     this.state.data.notificationType = NOTIFICATION_TYPE_REQEST;
