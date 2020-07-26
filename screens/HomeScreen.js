@@ -92,6 +92,11 @@ export default class NewHomeScreen extends React.Component {
 
       <SafeAreaView style={styles.container}>
         <View style={styles.container}>
+
+          <View style={{ justifyContent: 'center', alignItems: 'center', width: '100%', height: 100, backgroundColor: '#39AAA3' }}>
+            <Text style={{ color: 'white', fontSize: 25, marginTop: 20 }}>Hello Worker</Text>
+          </View>
+
           <View style={styles.imageHeader}>
             <MaterialCommunityIcons name="face-profile" size={35} color="black" onPress={() => {
               NavigationService.navigate("ProfileScreen");
@@ -155,7 +160,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     width: 70,
     height: 35,
-    marginTop: 105,
     marginLeft: 300
   },
   mainImage: {

@@ -36,7 +36,7 @@ export default class ProfileScreen extends Component {
   }
 
   handleLogoutButton = () => {
-    NavigationService.navigate("Login")
+    NavigationService.navigate("LoginV2")
   }
 
   // not have history order Screen yet
@@ -340,7 +340,7 @@ export default class ProfileScreen extends Component {
                 borderRadius: 10,
 
 
-                width: 80, height: 60,
+                width: 70, height: 40,
                 justifyContent: 'center',
                 alignItems: 'center',
                 marginLeft: 50,
@@ -359,6 +359,7 @@ export default class ProfileScreen extends Component {
               style={{
                 marginTop: 50,
                 marginLeft: 20,
+                alignItems: 'center'
               }}
               onPress={() => {
 
@@ -376,7 +377,7 @@ export default class ProfileScreen extends Component {
               }}
             >
               <Image
-                style={{ width: 230, height: 60, borderRadius: 10, }}
+                style={{ width: 170, height: 40, borderRadius: 10, }}
                 source={require("../assets/images/btnSaveProfile.png")}
               />
             </TouchableOpacity>
