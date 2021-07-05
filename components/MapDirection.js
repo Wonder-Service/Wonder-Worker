@@ -86,7 +86,7 @@ export default class MapDirection extends Component {
 
     await GET(ACCEPT_ORDER_ENDPOINT + '/' + orderId
       , {}, {}).then(res => {
-        if (res.lat != null) {
+        if (res.lat != null || res.lat != 0) {
           this.setState({
             destinationCoords: {
               latitude: res.lat,
